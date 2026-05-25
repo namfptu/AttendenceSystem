@@ -231,13 +231,9 @@ Sinh viên là người thực hiện check-in.
 ### Thông tin sinh viên
 
 - StudentCode
-- FullName
-- Email
-- Phone
-- DateOfBirth
-- Gender
 - Faculty
 - Major
+*(Ghi chú: FullName, Email, Phone... được lưu chung tại bảng Users)*
 
 ---
 
@@ -270,25 +266,17 @@ Sinh viên là người thực hiện check-in.
 
 ---
 
-## 4.5 Quản lí lớp học phần
+## 4.5 Quản lí Lớp hành chính & Phân công giảng dạy
 
-### Chức năng
+### Lớp hành chính (Class)
+- Quản lí mã lớp (VD: SE1801)
+- Gán sinh viên vào lớp cố định
 
-- Tạo lớp học phần
-- Gán môn học
-- Gán giảng viên
-- Gán sinh viên
-- Quản lí sĩ số
-- Khóa lớp
-
-### Thông tin
-
-- ClassCode
-- ClassName
-- Subject
-- Lecturer
-- Semester
-- Room
+### Lớp học phần / Phân công giảng dạy (ClassSubject)
+- Gán môn học cho lớp
+- Gán giảng viên phụ trách
+- Quản lí trạng thái môn học (Active, Closed)
+- Là cơ sở để sinh lịch học và điểm danh
 
 ---
 
@@ -436,11 +424,11 @@ Students
 - Id
 - UserId
 - StudentCode
-- FullName
-- Email
-- Phone
 - Faculty
 - Major
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -452,10 +440,10 @@ Lecturers
 - Id
 - UserId
 - LecturerCode
-- FullName
-- Email
-- Phone
 - Department
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -469,6 +457,9 @@ Subjects
 - SubjectName
 - Credits
 - Description
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -481,20 +472,40 @@ Semesters
 - Name
 - StartDate
 - EndDate
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
 
-### CourseClasses
+### Classes (Lớp hành chính)
 
 ```text
-CourseClasses
+Classes
 - Id
 - ClassCode
 - ClassName
+- CreatedAt
+- UpdatedAt
+- IsDeleted
+```
+
+---
+
+### ClassSubjects (Lớp học phần)
+
+```text
+ClassSubjects
+- Id
+- ClassId
 - SubjectId
 - LecturerId
 - SemesterId
+- Status
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -504,9 +515,13 @@ CourseClasses
 ```text
 ClassStudents
 - Id
-- CourseClassId
+- ClassId
 - StudentId
 - EnrolledAt
+- Status
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -516,11 +531,14 @@ ClassStudents
 ```text
 Schedules
 - Id
-- CourseClassId
+- ClassSubjectId
 - DayOfWeek
 - StartTime
 - EndTime
 - Room
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -530,14 +548,25 @@ Schedules
 ```text
 AttendanceSessions
 - Id
-- CourseClassId
+- ClassSubjectId
+- ScheduleId
 - SessionDate
 - Title
 - StartTime
 - EndTime
 - LateAfterMinutes
 - Status
+- OpenedAt
+- ClosedAt
+- CreatedByLecturerId
 - QrToken
+- QrExpiredAt
+- AllowedLatitude
+- AllowedLongitude
+- AllowedRadiusMeters
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -552,6 +581,17 @@ AttendanceRecords
 - Status
 - CheckInTime
 - CheckInMethod
+- IsManualEdited
+- EditedByLecturerId
+- EditedAt
+- Note
+- CheckInLatitude
+- CheckInLongitude
+- CheckInIpAddress
+- UserAgent
+- CreatedAt
+- UpdatedAt
+- IsDeleted
 ```
 
 ---
@@ -562,19 +602,20 @@ AttendanceRecords
 User 1 - 1 Student
 User 1 - 1 Lecturer
 
-Subject 1 - N CourseClass
-Lecturer 1 - N CourseClass
-Semester 1 - N CourseClass
+Class 1 - N ClassStudent
+Student 1 - N ClassStudent
 
-CourseClass N - N Student
-=> thông qua ClassStudents
+Class 1 - N ClassSubject
+Subject 1 - N ClassSubject
+Lecturer 1 - N ClassSubject
+Semester 1 - N ClassSubject
 
-CourseClass 1 - N Schedule
+ClassSubject 1 - N Schedule
+ClassSubject 1 - N AttendanceSession
 
-CourseClass 1 - N AttendanceSession
+Schedule 1 - N AttendanceSession
 
 AttendanceSession 1 - N AttendanceRecord
-
 Student 1 - N AttendanceRecord
 ```
 

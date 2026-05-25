@@ -1,0 +1,216 @@
+Các vấn đề cần cải thiện trong Model hiện tại
+1. Duplicate data giữa Users và Students/Lecturers
+
+Hiện tại:
+
+Users
+- FullName
+- Email
+
+nhưng:
+
+Students
+- FullName
+- Email
+
+và:
+
+Lecturers
+- FullName
+- Email
+
+=> bị lặp dữ liệu.
+
+Nên refactor:
+
+Users
+- Id
+- Username
+- Email
+- PasswordHash
+- FullName
+- Role
+Students
+- Id
+- UserId
+- StudentCode
+- Faculty
+- Major
+Lecturers
+- Id
+- UserId
+- LecturerCode
+- Department
+
+Thông tin chung chỉ lưu ở Users.
+
+2. AttendanceSession nên liên kết với Schedule
+
+Hiện tại:
+
+AttendanceSession
+- CourseClassId
+
+Nhưng một lớp có:
+
+nhiều lịch học
+nhiều buổi học
+
+Nên thêm:
+
+ScheduleId
+
+Quan hệ:
+
+Schedule 1 - N AttendanceSessions
+
+Giúp:
+
+quản lí buổi học thực tế
+biết session thuộc lịch nào
+support nhiều ca học/phòng học
+3. AttendanceSession thiếu lifecycle fields
+
+Nên thêm:
+
+OpenedAt
+ClosedAt
+QrExpiredAt
+CreatedByLecturerId
+
+Để:
+
+kiểm soát phiên điểm danh
+biết ai tạo phiên
+biết QR còn hạn không
+4. AttendanceRecord thiếu audit fields
+
+Hiện tại chưa đủ cho trường hợp giảng viên sửa tay.
+
+Nên thêm:
+
+IsManualEdited
+EditedByLecturerId
+EditedAt
+Note
+CreatedAt
+
+Để:
+
+audit lịch sử chỉnh sửa
+biết record do hệ thống hay GV sửa
+5. Thiếu chống check-in gian lận
+
+Nếu chỉ có QR token:
+
+sinh viên ở nhà vẫn có thể scan QR được gửi từ bạn bè.
+
+Nên bổ sung:
+
+AttendanceSession
+AllowedLatitude
+AllowedLongitude
+AllowedRadiusMeters
+AttendanceRecord
+CheckInLatitude
+CheckInLongitude
+CheckInIpAddress
+UserAgent
+
+Workflow:
+
+frontend gửi GPS khi check-in
+API kiểm tra khoảng cách hợp lệ
+6. Soft delete chưa đồng nhất
+
+Hiện chỉ có vài bảng có:
+
+IsDeleted
+
+Nên thống nhất cho:
+
+Students
+Lecturers
+Subjects
+CourseClasses
+
+để tránh hard delete dữ liệu.
+
+7. Thiếu status fields cho entity
+
+Nên bổ sung:
+
+CourseClasses
+Status
+
+Ví dụ:
+
+Active
+Closed
+Cancelled
+AttendanceSessions
+Status
+
+Ví dụ:
+
+Pending
+Open
+Closed
+ClassStudents
+Status
+
+Ví dụ:
+
+Active
+Dropped
+Completed
+8. Unique constraints chưa đầy đủ
+
+Nên có:
+
+User.Email unique
+User.Username unique
+Student.StudentCode unique
+Lecturer.LecturerCode unique
+Subject.SubjectCode unique
+CourseClass.ClassCode unique
+
+Ngoài ra:
+
+(CourseClassId, StudentId) unique
+
+để tránh thêm SV nhiều lần vào lớp.
+
+(AttendanceSessionId, StudentId) unique
+
+để tránh check-in nhiều lần.
+
+9. Attendance workflow là core business workflow
+
+Core workflow của hệ thống:
+
+Giảng viên mở session
+→ sinh QR
+→ sinh viên check-in
+→ validate
+→ ghi AttendanceRecord
+→ xử lý Present/Late
+→ đóng session
+→ auto Absent
+
+Đây là phần quan trọng nhất của hệ thống, cần model support tốt nhất.
+
+10. Nên thêm audit fields chung
+
+Khuyến nghị thêm cho các entity chính:
+
+CreatedAt
+UpdatedAt
+IsDeleted
+
+Để:
+
+tracking dữ liệu
+support audit
+support soft delete
+dễ mở rộng sau này.
