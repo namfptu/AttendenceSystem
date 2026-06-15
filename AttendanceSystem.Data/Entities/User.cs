@@ -29,6 +29,13 @@ namespace AttendanceSystem.Data.Entities
         public string FullName { get; set; }
 
         /// <summary>
+        /// Link ảnh thẻ để giảng viên đối chiếu khi điểm danh.
+        /// </summary>
+        public string? AvatarUrl { get; set; }
+
+        public string? Phone { get; set; }
+
+        /// <summary>
         /// Vai trò của user: Admin, Lecturer, Student.
         /// </summary>
         public Role Role { get; set; }

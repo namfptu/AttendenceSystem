@@ -8,3 +8,4 @@ namespace AttendanceSystem.Data.Entities.Enums
         Excused
     }
 }
+//
