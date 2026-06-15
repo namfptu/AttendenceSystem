@@ -21,9 +21,11 @@ erDiagram
     
     CLASS_SUBJECT ||--o{ SCHEDULE : "1-N"
     CLASS_SUBJECT ||--o{ ATTENDANCE_SESSION : "1-N"
+    CLASS_SUBJECT ||--o{ CLASS_SUBSTITUTE : "1-N"
     
     SCHEDULE ||--o{ ATTENDANCE_SESSION : "1-N"
     LECTURER ||--o{ ATTENDANCE_SESSION : "1-N"
+    LECTURER ||--o{ CLASS_SUBSTITUTE : "1-N"
     
     ATTENDANCE_SESSION ||--o{ ATTENDANCE_RECORD : "1-N"
     STUDENT ||--o{ ATTENDANCE_RECORD : "1-N"
@@ -42,9 +44,9 @@ erDiagram
 
 | Id | Username | PasswordHash | FullName | Email | Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `admin` | `***` | Quản trị viên | admin@fpt.edu.vn | Admin |
-| 2 | `thaya` | `***` | Nguyễn Văn A | an@fpt.edu.vn | Lecturer |
-| 3 | `svb` | `***` | Trần Văn B | btvse1801@fpt.edu.vn | Student |
+| 1 | `admin` | `***` | Quản trị viên | admin@fpt.edu.vn | Admin | NULL |
+| 2 | `thaya` | `***` | Nguyễn Văn A | an@fpt.edu.vn | Lecturer | `https://.../a.jpg` |
+| 3 | `svb` | `***` | Trần Văn B | btvse1801@fpt.edu.vn | Student | `https://.../b.jpg` |
 
 #### Model: `Student` & `Lecturer`
 **Mô tả:** Chứa các thông tin đặc thù của sinh viên hoặc giảng viên. Trỏ khóa ngoại `UserId` về bảng `User`.
@@ -111,6 +113,13 @@ erDiagram
 
 *💡 Đọc dữ liệu:* Dòng `800` nghĩa là: Lớp SE1801 học môn PRN231, do thầy Nguyễn Văn A dạy vào kỳ Fall 2026.
 
+#### Model: `ClassSubstitute` (Phân công Dạy thay)
+**Mô tả:** Admin gán quyền cho một giảng viên khác được điểm danh thay cho giảng viên chính của lớp vào một ngày cụ thể.
+
+| Id | ClassSubjectId | LecturerId | SubstituteDate | Note |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 800 (SE1801-PRN231) | 5 (Cô C) | 2026-09-14 | Thầy A ốm |
+
 ---
 
 ### 2.4. Nhóm Điểm danh (Schedule, Session, Record)
@@ -131,17 +140,17 @@ erDiagram
 | Id | ClassSubjectId | ScheduleId | SessionDate | Status | OpenedAt |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 5000| 800 (SE1801-PRN231)| 1001 (Sáng T2) | 2026-09-07 | Closed | 07:30:05 |
-| 5001| 800 (SE1801-PRN231)| 1002 (Sáng T5) | 2026-09-10 | Open | 10:01:00 |
+| 5001| 800 (SE1801-PRN231)| NULL (Học bù) | 2026-09-13 | Open | 10:01:00 |
 
 #### Model: `AttendanceRecord` (Chi tiết điểm danh của từng SV)
 **Mô tả:** Ghi nhận lịch sử check-in của sinh viên. Nếu trốn học, dòng sẽ do hệ thống tạo và báo Absent.
 
-| Id | AttendanceSessionId | StudentId | Status | CheckInTime | CheckInMethod |
+| Id | AttendanceSessionId | StudentId | Status | CheckInTime | Note |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | 5000 (Sáng T2, 07/09)| 10 (Trần Văn B) | **Present** | 07:32:00 | QR |
+| 1 | 5000 (Sáng T2, 07/09)| 10 (Trần Văn B) | **Present** | 07:32:00 | NULL |
 | 2 | 5000 (Sáng T2, 07/09)| 11 (Lê Văn C) | **Absent** | NULL | NULL |
-| 3 | 5001 (Sáng T5, 10/09)| 10 (Trần Văn B) | **Late** | 10:25:00 | QR |
-| 4 | 5001 (Sáng T5, 10/09)| 11 (Lê Văn C) | **Present** | 10:02:00 | Manual |
+| 3 | 5001 (Chủ nhật, 13/09)| 10 (Trần Văn B) | **Late** | 10:25:00 | Ngủ quên |
+| 4 | 5001 (Chủ nhật, 13/09)| 11 (Lê Văn C) | **Present** | 10:02:00 | NULL |
 
 ---
 
@@ -154,7 +163,7 @@ erDiagram
 
 2. **Giảng viên A mở phiên điểm danh lớp SE1801 môn PRN231**
    - Từ `ClassSubjectId = 800`, tạo mới 1 `AttendanceSession` nối với `ScheduleId = 1001`.
-   - Sinh viên B quét mã QR -> Insert vào `AttendanceRecord` (SessionId = Session vừa tạo, StudentId = 10).
+   - Giảng viên A nhìn ảnh thẻ và gọi tên sinh viên B -> Tick Present -> Insert vào `AttendanceRecord` (SessionId = Session vừa tạo, StudentId = 10, Status = Present).
 
 3. **Tính phần trăm vắng mặt môn PRN231 của sinh viên B**
    - Lấy tổng số `AttendanceSession` của `ClassSubjectId = 800` (đã `Closed`).

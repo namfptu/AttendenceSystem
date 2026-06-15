@@ -21,23 +21,12 @@ namespace AttendanceSystem.Data.Entities
         public AttendanceStatus Status { get; set; }
 
         public DateTime? CheckInTime { get; set; }
-        
-        /// <summary>
-        /// Phương thức check-in: QR, Manual.
-        /// </summary>
-        public string CheckInMethod { get; set; }
 
         // Audit fields cho trường hợp giảng viên sửa tay
         public bool IsManualEdited { get; set; } = false;
         public int? EditedByLecturerId { get; set; }
         public DateTime? EditedAt { get; set; }
         public string Note { get; set; }
-
-        // Anti-fraud Fields
-        public double? CheckInLatitude { get; set; }
-        public double? CheckInLongitude { get; set; }
-        public string CheckInIpAddress { get; set; }
-        public string UserAgent { get; set; }
 
         // Navigation properties
         public virtual AttendanceSession AttendanceSession { get; set; }

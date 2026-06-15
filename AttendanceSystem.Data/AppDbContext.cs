@@ -23,6 +23,7 @@ namespace AttendanceSystem.Data
         public DbSet<Class> Classes { get; set; }
         public DbSet<ClassSubject> ClassSubjects { get; set; }
         public DbSet<ClassStudent> ClassStudents { get; set; }
+        public DbSet<ClassSubstitute> ClassSubstitutes { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<AttendanceSession> AttendanceSessions { get; set; }
         public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
@@ -92,6 +93,12 @@ namespace AttendanceSystem.Data
                 .HasOne(s => s.CreatedByLecturer)
                 .WithMany()
                 .HasForeignKey(s => s.CreatedByLecturerId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            builder.Entity<ClassSubstitute>()
+                .HasOne(cs => cs.Lecturer)
+                .WithMany()
+                .HasForeignKey(cs => cs.LecturerId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 

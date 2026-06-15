@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using AttendanceSystem.Data;
+
 namespace AttendanceSystem.Web
     {
     public class Program
@@ -6,7 +9,28 @@ namespace AttendanceSystem.Web
             {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Configure API Client
+            builder.Services.AddHttpClient<AttendanceSystem.Web.Services.IApiClient, AttendanceSystem.Web.Services.ApiClient>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5056/api/");
+            });
+            
+            builder.Services.AddAuthentication("Cookies")
+                .AddCookie("Cookies", options =>
+                {
+                    options.LoginPath = "/Auth/Login";
+                    options.LogoutPath = "/Auth/Logout";
+                    options.AccessDeniedPath = "/Auth/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromHours(12);
+                });
+
+            builder.Services.AddAuthorization(options =>
+                {
+                    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+                    options.AddPolicy("LecturerOnly", policy => policy.RequireRole("Lecturer"));
+                    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+                });
+
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
@@ -24,6 +48,7 @@ namespace AttendanceSystem.Web
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
