@@ -15,7 +15,7 @@ Hệ thống hỗ trợ:
 - Quản lí môn học
 - Quản lí lớp học phần
 - Quản lí lịch học
-- Điểm danh bằng QR code
+- Điểm danh thủ công (Manual)
 - Theo dõi trạng thái đi học
 - Báo cáo thống kê
 - Dashboard quản trị
@@ -120,7 +120,7 @@ Nhiệm vụ:
 
 - Xử lý nghiệp vụ hệ thống
 - Logic điểm danh
-- Logic check-in QR
+- Logic check-in thủ công
 - Logic báo cáo
 
 ### AttendanceSystem.Data
@@ -172,7 +172,7 @@ Giảng viên là người trực tiếp quản lí điểm danh.
 - Xem lớp đang dạy
 - Xem danh sách sinh viên
 - Tạo phiên điểm danh
-- Mở điểm danh QR
+- Điểm danh sinh viên (gọi tên/điểm danh ảnh)
 - Theo dõi check-in realtime
 - Chỉnh sửa trạng thái điểm danh
 - Đóng phiên điểm danh
@@ -189,7 +189,7 @@ Sinh viên là người thực hiện check-in.
 - Đăng nhập
 - Xem lịch học
 - Xem lớp học phần
-- Check-in bằng QR
+- Xem tình trạng điểm danh của bản thân
 - Xem lịch sử điểm danh
 - Xem số buổi vắng/muộn
 
@@ -666,10 +666,10 @@ POST /api/attendance-sessions/{id}/close
 
 ---
 
-## QR Check-in
+## Check-in (Điểm danh thủ công)
 
 ```http
-POST /api/attendance/check-in
+POST /api/attendance/check-in-manual
 ```
 
 ---
@@ -737,11 +737,11 @@ Nên có:
 
 # 10. Feature nâng cao
 
-## QR Attendance
+## Manual Attendance (Điểm danh thủ công)
 
-- Sinh QR token
-- Sinh viên quét QR để check-in
-- Token có thời hạn
+- Giảng viên xem danh sách sinh viên kèm ảnh thẻ.
+- Chọn trạng thái (Present/Absent/Late).
+- Có lưu vết chỉnh sửa (Audit Log).
 
 ---
 

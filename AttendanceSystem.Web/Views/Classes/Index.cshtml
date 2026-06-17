@@ -1,0 +1,43 @@
+@model IEnumerable<AttendanceSystem.Business.DTOs.ClassDto>
+@{
+    ViewData["Title"] = "Classes";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title">Class Management</h4>
+                <a href="/Classes/Create" class="btn btn-primary">Add New Class</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped dt-responsive nowrap w-100" id="datatable-buttons">
+                    <thead>
+                        <tr>
+                            <th>Class Code</th>
+                            <th>Class Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ClassCode</td>
+                                <td>@item.ClassName</td>
+                                <td>
+                                    <a href="/Classes/Students/@item.Id" class="btn btn-sm btn-info me-2"><i class="ti ti-users"></i> Students</a>
+                                    <a href="/Classes/Edit/@item.Id" class="text-primary me-2"><i class="ti ti-edit fs-5"></i></a>
+                                    <form action="/Classes/Delete/@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this class?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link text-danger p-0 m-0"><i class="ti ti-trash fs-5"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

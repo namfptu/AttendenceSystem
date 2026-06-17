@@ -23,8 +23,8 @@ Sync trực tiếp từ origin/develop
 ## Local
 
 ```text
-feature/student-management
-feature/attendance
+feature/devA
+feature/devB
 feature/auth
 ...
 ```
@@ -33,8 +33,8 @@ feature/auth
 
 ```text
 origin/develop
-origin/feature/student-management
-origin/feature/attendance
+origin/feature/devA
+origin/feature/devB
 ...
 ```
 
@@ -85,7 +85,7 @@ git fetch origin
 Ví dụ:
 
 ```bash
-git checkout -b feature/student-management origin/develop
+git checkout -b feature/devA origin/develop
 ```
 
 Ý nghĩa:
@@ -100,7 +100,7 @@ từ trạng thái mới nhất của origin/develop
 # 3. Push feature branch lần đầu
 
 ```bash
-git push -u origin feature/student-management
+git push -u origin feature/devA
 ```
 
 Sau lần đầu:
@@ -114,7 +114,7 @@ Sau lần đầu:
 ## Đứng ở feature branch
 
 ```bash
-git checkout feature/student-management
+git checkout feature/devA
 ```
 
 ## Sync develop mới nhất NGAY ĐẦU BUỔI
@@ -189,7 +189,7 @@ Code giờ đã được:
 # 8. Tạo Pull Request (PR)
 
 ```text
-origin/feature/student-management
+origin/feature/devA
 →
 origin/develop
 ```
@@ -218,9 +218,9 @@ Ví dụ:
 ```bash
 git fetch origin
 
-git checkout -b feature/attendance origin/develop
+git checkout -b feature/devB origin/develop
 
-git push -u origin feature/attendance
+git push -u origin feature/devB
 ```
 
 Loop workflow tiếp tục.
@@ -329,13 +329,13 @@ git push
 ## Anh làm:
 
 ```text
-feature/student-management
+feature/devA
 ```
 
 ## Người còn lại làm:
 
 ```text
-feature/attendance
+feature/devB
 ```
 
 Cả 2:

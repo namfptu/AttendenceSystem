@@ -18,9 +18,9 @@ namespace AttendanceSystem.Data.Entities
         public int ClassSubjectId { get; set; }
         
         /// <summary>
-        /// Khóa ngoại trỏ về lịch học cụ thể.
+        /// Khóa ngoại trỏ về lịch học cụ thể. Có thể NULL nếu là buổi học bù (Make-up class).
         /// </summary>
-        public int ScheduleId { get; set; }
+        public int? ScheduleId { get; set; }
 
         public DateTime SessionDate { get; set; }
         public string Title { get; set; }
@@ -43,25 +43,7 @@ namespace AttendanceSystem.Data.Entities
         public DateTime? ClosedAt { get; set; }
         public int CreatedByLecturerId { get; set; }
         
-        // QR Code
-        public string QrToken { get; set; }
-        public DateTime? QrExpiredAt { get; set; }
-
-        // Anti-fraud Check-in Fields
-        /// <summary>
-        /// Vĩ độ cho phép check-in (tọa độ phòng học).
-        /// </summary>
-        public double? AllowedLatitude { get; set; }
-        
-        /// <summary>
-        /// Kinh độ cho phép check-in (tọa độ phòng học).
-        /// </summary>
-        public double? AllowedLongitude { get; set; }
-        
-        /// <summary>
-        /// Bán kính hợp lệ cho phép check-in (tính bằng mét).
-        /// </summary>
-        public double? AllowedRadiusMeters { get; set; }
+        // (Đã loại bỏ các trường QR Code và GPS để chuyển về điểm danh thủ công toàn phần)
 
         // Navigation properties
         public virtual ClassSubject ClassSubject { get; set; }
