@@ -9,6 +9,7 @@ namespace AttendanceSystem.Web.Services
     {
         Task<T?> GetAsync<T>(string endpoint);
         Task<TResponse?> PostAsync<TRequest, TResponse>(string endpoint, TRequest data);
+        Task<TResponse?> PostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent content);
         Task<bool> PutAsync<TRequest>(string endpoint, TRequest data);
         Task<bool> DeleteAsync(string endpoint);
     }
@@ -39,7 +40,16 @@ namespace AttendanceSystem.Web.Services
             {
                 return await response.Content.ReadFromJsonAsync<TResponse>();
             }
-            // Realistically we should handle validation errors (400) here, but keep simple for now
+            return default;
+        }
+
+        public async Task<TResponse?> PostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent content)
+        {
+            var response = await _httpClient.PostAsync(endpoint, content);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<TResponse>();
+            }
             return default;
         }
 

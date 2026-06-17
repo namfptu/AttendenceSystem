@@ -56,7 +56,7 @@ namespace AttendanceSystem.Business.Services
         {
             var user = new User
             {
-                Username = dto.Email.Split('@')[0],
+                Username = dto.Email,
                 PasswordHash = "123456", // In real app, hash this
                 Email = dto.Email,
                 FullName = dto.FullName,

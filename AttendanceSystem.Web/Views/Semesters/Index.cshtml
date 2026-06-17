@@ -1,0 +1,44 @@
+@model IEnumerable<AttendanceSystem.Business.DTOs.SemesterDto>
+@{
+    ViewData["Title"] = "Semesters";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title">Semester Management</h4>
+                <a href="/Semesters/Create" class="btn btn-primary">Add New Semester</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped dt-responsive nowrap w-100" id="datatable-buttons">
+                    <thead>
+                        <tr>
+                            <th>Semester Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+                                <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a href="/Semesters/Edit/@item.Id" class="text-primary me-2"><i class="ti ti-edit fs-5"></i></a>
+                                    <form action="/Semesters/Delete/@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this semester?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link text-danger p-0 m-0"><i class="ti ti-trash fs-5"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

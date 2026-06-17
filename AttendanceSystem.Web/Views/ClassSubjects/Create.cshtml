@@ -1,0 +1,56 @@
+@model AttendanceSystem.Business.DTOs.ClassSubjectDto
+@{
+    ViewData["Title"] = "Add Course Section";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Assign Subject to Class</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="SemesterId" class="form-label">Semester</label>
+                        <select asp-for="SemesterId" class="form-select" asp-items="ViewBag.Semesters" required>
+                            <option value="">-- Select Semester --</option>
+                        </select>
+                        <span asp-validation-for="SemesterId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ClassId" class="form-label">Class</label>
+                        <select asp-for="ClassId" class="form-select" asp-items="ViewBag.Classes" required>
+                            <option value="">-- Select Class --</option>
+                        </select>
+                        <span asp-validation-for="ClassId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SubjectId" class="form-label">Subject</label>
+                        <select asp-for="SubjectId" class="form-select" asp-items="ViewBag.Subjects" required>
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                        <span asp-validation-for="SubjectId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="LecturerId" class="form-label">Lecturer</label>
+                        <select asp-for="LecturerId" class="form-select" asp-items="ViewBag.Lecturers" required>
+                            <option value="">-- Select Lecturer --</option>
+                        </select>
+                        <span asp-validation-for="LecturerId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a href="/ClassSubjects/Index" class="btn btn-light me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Assignment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
