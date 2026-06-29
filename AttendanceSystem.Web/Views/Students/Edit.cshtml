@@ -1,0 +1,55 @@
+@model AttendanceSystem.Business.DTOs.StudentDto
+@{
+    ViewData["Title"] = "Edit Student";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Edit Student</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="StudentCode" class="form-label">Student Code</label>
+                        <input asp-for="StudentCode" class="form-control" required />
+                        <span asp-validation-for="StudentCode" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">Full Name</label>
+                        <input asp-for="FullName" class="form-control" required />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Faculty" class="form-label">Faculty</label>
+                        <input asp-for="Faculty" class="form-control" required />
+                        <span asp-validation-for="Faculty" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Major" class="form-label">Major</label>
+                        <input asp-for="Major" class="form-control" required />
+                        <span asp-validation-for="Major" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a href="/Students/Index" class="btn btn-light me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

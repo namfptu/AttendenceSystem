@@ -9,10 +9,11 @@ namespace AttendanceSystem.Web.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly AttendanceSystem.Web.Services.IApiClient _apiClient;
 
-        public AuthController()
+        public AuthController(AttendanceSystem.Web.Services.IApiClient apiClient)
         {
+            _apiClient = apiClient;
         }
 
         [HttpGet]
@@ -27,24 +28,29 @@ namespace AttendanceSystem.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
+        public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
         {
             // Simple hardcoded admin fallback if DB is empty
-            if (username?.ToLower() == "admin" && password == "admin123")
+            if (email?.ToLower() == "admin@fpt.edu.vn" && password == "admin123")
             {
-                await SignInUser("admin", "Admin", 1);
+                await SignInUser("admin@fpt.edu.vn", "Admin", 1);
                 return RedirectToLocal(returnUrl);
             }
 
-            // Normal DB Login - temporarily disabled until Users API is built
-            /*
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username && !u.IsDeleted);
-            if (user != null && user.PasswordHash == password) 
+            // Normal DB Login via API
+            var loginRequest = new AttendanceSystem.Business.DTOs.LoginRequestDto
             {
-                await SignInUser(user.Username, user.Role.ToString(), user.Id);
+                Email = email,
+                Password = password
+            };
+
+            var user = await _apiClient.PostAsync<AttendanceSystem.Business.DTOs.LoginRequestDto, AttendanceSystem.Business.DTOs.UserDto>("Auth/Login", loginRequest);
+
+            if (user != null)
+            {
+                await SignInUser(user.Username, user.Role, user.Id);
                 return RedirectToLocal(returnUrl);
             }
-            */
 
             ViewData["ErrorMessage"] = "Invalid username or password";
             ViewData["ReturnUrl"] = returnUrl;

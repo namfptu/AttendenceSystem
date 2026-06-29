@@ -40,7 +40,7 @@
                 <img src="~/assets/images/avatar-1.jpg" alt="" class="avatar avatar-md rounded-circle" />
                 <div>
                   <h4 class="mb-0 small">@User.Identity?.Name</h4>
-                  <p class="mb-0 small text-muted">Administrator</p>
+                  <p class="mb-0 small text-muted">@(User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value)</p>
                 </div>
               </div>
               <div class="p-3 d-flex flex-column gap-1 small lh-lg">
@@ -68,15 +68,23 @@
       <li class="px-4 py-2"><small class="nav-text text-uppercase text-muted">Main</small></li>
       <li><a class="nav-link" href="/"><i class="ti ti-home"></i><span class="nav-text">Dashboard</span></a></li>
       
-      <li class="px-4 pt-4 pb-2"><small class="nav-text text-uppercase text-muted">Management</small></li>
-      <li><a class="nav-link" href="/Lecturers"><i class="ti ti-users"></i><span class="nav-text">Lecturers</span></a></li>
-      <li><a class="nav-link" href="/Students"><i class="ti ti-school"></i><span class="nav-text">Students</span></a></li>
-      <li><a class="nav-link" href="/Classes"><i class="ti ti-building"></i><span class="nav-text">Classes</span></a></li>
-      <li><a class="nav-link" href="/Subjects"><i class="ti ti-book"></i><span class="nav-text">Subjects</span></a></li>
+      @if (User.IsInRole("Admin"))
+      {
+          <li class="px-4 pt-4 pb-2"><small class="nav-text text-uppercase text-muted">Management</small></li>
+          <li><a class="nav-link" href="/Lecturers"><i class="ti ti-users"></i><span class="nav-text">Lecturers</span></a></li>
+          <li><a class="nav-link" href="/Students"><i class="ti ti-school"></i><span class="nav-text">Students</span></a></li>
+          <li><a class="nav-link" href="/Classes"><i class="ti ti-building"></i><span class="nav-text">Classes</span></a></li>
+          <li><a class="nav-link" href="/Subjects"><i class="ti ti-book"></i><span class="nav-text">Subjects</span></a></li>
+          <li><a class="nav-link" href="/Semesters"><i class="ti ti-calendar-event"></i><span class="nav-text">Semesters</span></a></li>
+          <li><a class="nav-link" href="/ClassSubjects"><i class="ti ti-layers-intersect"></i><span class="nav-text">Course Sections</span></a></li>
+      }
       
-      <li class="px-4 pt-4 pb-2"><small class="nav-text text-uppercase text-muted">Attendance</small></li>
-      <li><a class="nav-link" href="/Schedules"><i class="ti ti-calendar"></i><span class="nav-text">Schedules</span></a></li>
-      <li><a class="nav-link" href="/AttendanceSessions"><i class="ti ti-check"></i><span class="nav-text">Sessions</span></a></li>
+      @if (User.IsInRole("Admin") || User.IsInRole("Lecturer") || User.IsInRole("Student"))
+      {
+          <li class="px-4 pt-4 pb-2"><small class="nav-text text-uppercase text-muted">Attendance</small></li>
+          <li><a class="nav-link" href="/Schedules"><i class="ti ti-calendar"></i><span class="nav-text">Schedules</span></a></li>
+          <li><a class="nav-link" href="/AttendanceSessions"><i class="ti ti-check"></i><span class="nav-text">Sessions</span></a></li>
+      }
     </ul>
   </aside>
 
