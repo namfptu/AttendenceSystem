@@ -20,7 +20,7 @@ namespace AttendanceSystem.Web.Controllers
 
         public IActionResult Index()
             {
-            return View();
+            return RedirectToAction("Index", "Dashboard");
             }
 
         public IActionResult Privacy()

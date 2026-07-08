@@ -48,7 +48,7 @@ namespace AttendanceSystem.Web.Controllers
 
             if (user != null)
             {
-                await SignInUser(user.Username, user.Role, user.Id);
+                await SignInUser(user.Username, user.Role, user.Id, user.LecturerId, user.StudentId);
                 return RedirectToLocal(returnUrl);
             }
 
@@ -69,7 +69,7 @@ namespace AttendanceSystem.Web.Controllers
             return View();
         }
 
-        private async Task SignInUser(string username, string role, int userId)
+        private async Task SignInUser(string username, string role, int userId, int? lecturerId = null, int? studentId = null)
         {
             var claims = new List<Claim>
             {
@@ -77,6 +77,12 @@ namespace AttendanceSystem.Web.Controllers
                 new Claim(ClaimTypes.Role, role),
                 new Claim("UserId", userId.ToString())
             };
+
+            if (lecturerId.HasValue)
+                claims.Add(new Claim("LecturerId", lecturerId.Value.ToString()));
+
+            if (studentId.HasValue)
+                claims.Add(new Claim("StudentId", studentId.Value.ToString()));
 
             var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
 

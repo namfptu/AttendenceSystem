@@ -23,12 +23,28 @@ namespace AttendanceSystem.API.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
             if (user != null && user.PasswordHash == request.Password)
             {
+                int? lecturerId = null;
+                int? studentId = null;
+
+                if (user.Role == AttendanceSystem.Data.Entities.Enums.Role.Lecturer)
+                {
+                    var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id && !l.IsDeleted);
+                    lecturerId = lecturer?.Id;
+                }
+                else if (user.Role == AttendanceSystem.Data.Entities.Enums.Role.Student)
+                {
+                    var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id && !s.IsDeleted);
+                    studentId = student?.Id;
+                }
+
                 return Ok(new UserDto
                 {
                     Id = user.Id,
                     Username = user.Username,
                     FullName = user.FullName,
-                    Role = user.Role.ToString()
+                    Role = user.Role.ToString(),
+                    LecturerId = lecturerId,
+                    StudentId = studentId
                 });
             }
 

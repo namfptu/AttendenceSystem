@@ -1,0 +1,72 @@
+@model AttendanceSystem.Business.DTOs.AdminDashboardDto
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h4><i class="ti ti-dashboard me-2"></i>Admin Dashboard</h4>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-6 col-md-3 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-primary mb-2"><i class="ti ti-school" style="font-size:32px"></i></div>
+                <h3 class="mb-0">@Model?.TotalStudents</h3>
+                <p class="text-muted small mb-0">Students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-success mb-2"><i class="ti ti-users" style="font-size:32px"></i></div>
+                <h3 class="mb-0">@Model?.TotalLecturers</h3>
+                <p class="text-muted small mb-0">Lecturers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-warning mb-2"><i class="ti ti-building" style="font-size:32px"></i></div>
+                <h3 class="mb-0">@Model?.TotalClasses</h3>
+                <p class="text-muted small mb-0">Classes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="text-info mb-2"><i class="ti ti-layers-intersect" style="font-size:32px"></i></div>
+                <h3 class="mb-0">@Model?.TotalClassSubjects</h3>
+                <p class="text-muted small mb-0">Course Sections</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Sessions -->
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-success mb-2"><i class="ti ti-player-play" style="font-size:48px"></i></div>
+                <h2 class="mb-0">@Model?.TodayOpenSessions</h2>
+                <p class="text-muted">Sessions Open Today</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-secondary mb-2"><i class="ti ti-player-stop" style="font-size:48px"></i></div>
+                <h2 class="mb-0">@Model?.TodayClosedSessions</h2>
+                <p class="text-muted">Sessions Closed Today</p>
+            </div>
+        </div>
+    </div>
+</div>
