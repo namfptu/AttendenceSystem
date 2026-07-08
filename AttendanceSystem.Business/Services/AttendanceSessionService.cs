@@ -1,0 +1,179 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using AttendanceSystem.Business.DTOs;
+using AttendanceSystem.Data;
+using AttendanceSystem.Data.Entities;
+using AttendanceSystem.Data.Entities.Enums;
+
+namespace AttendanceSystem.Business.Services
+{
+    public class AttendanceSessionService : IAttendanceSessionService
+    {
+        private readonly AppDbContext _context;
+
+        public AttendanceSessionService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IEnumerable<AttendanceSessionDto>> GetAllAsync()
+        {
+            return await QuerySessions()
+                .OrderByDescending(s => s.SessionDate)
+                .ThenByDescending(s => s.StartTime)
+                .Select(s => MapToDto(s))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<AttendanceSessionDto>> GetByLecturerIdAsync(int lecturerId)
+        {
+            return await QuerySessions()
+                .Where(s => s.ClassSubject.LecturerId == lecturerId)
+                .OrderByDescending(s => s.SessionDate)
+                .ThenByDescending(s => s.StartTime)
+                .Select(s => MapToDto(s))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<AttendanceSessionDto>> GetTodaySessionsByLecturerAsync(int lecturerId)
+        {
+            var today = DateTime.UtcNow.Date;
+            return await QuerySessions()
+                .Where(s => s.ClassSubject.LecturerId == lecturerId && s.SessionDate.Date == today)
+                .OrderBy(s => s.StartTime)
+                .Select(s => MapToDto(s))
+                .ToListAsync();
+        }
+
+        public async Task<AttendanceSessionDto> GetByIdAsync(int id)
+        {
+            var session = await QuerySessions()
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (session == null) return null;
+            return MapToDto(session);
+        }
+
+        public async Task<AttendanceSessionDto> CreateAsync(AttendanceSessionDto dto)
+        {
+            var session = new AttendanceSession
+            {
+                ClassSubjectId = dto.ClassSubjectId,
+                ScheduleId = dto.ScheduleId,
+                SessionDate = dto.SessionDate,
+                Title = dto.Title,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                LateAfterMinutes = dto.LateAfterMinutes,
+                Status = SessionStatus.Pending,
+                CreatedByLecturerId = dto.CreatedByLecturerId
+            };
+
+            _context.AttendanceSessions.Add(session);
+            await _context.SaveChangesAsync();
+
+            dto.Id = session.Id;
+            dto.Status = SessionStatus.Pending.ToString();
+            return dto;
+        }
+
+        public async Task<bool> OpenSessionAsync(int id)
+        {
+            var session = await _context.AttendanceSessions.FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+            if (session == null) return false;
+            if (session.Status != SessionStatus.Pending) return false;
+
+            session.Status = SessionStatus.Open;
+            session.OpenedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CloseSessionAsync(int id)
+        {
+            var session = await _context.AttendanceSessions
+                .Include(s => s.ClassSubject)
+                .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+
+            if (session == null) return false;
+            if (session.Status != SessionStatus.Open) return false;
+
+            // Lấy tất cả sinh viên thuộc lớp hành chính của ClassSubject này
+            var classStudentIds = await _context.ClassStudents
+                .Where(cs => cs.ClassId == session.ClassSubject.ClassId && !cs.IsDeleted && cs.Status == ClassStudentStatus.Active)
+                .Select(cs => cs.StudentId)
+                .ToListAsync();
+
+            // Lấy danh sách sinh viên đã có AttendanceRecord trong phiên này
+            var recordedStudentIds = await _context.AttendanceRecords
+                .Where(ar => ar.AttendanceSessionId == id && !ar.IsDeleted)
+                .Select(ar => ar.StudentId)
+                .ToListAsync();
+
+            // Sinh viên chưa có record → Auto Absent
+            var missingStudentIds = classStudentIds.Except(recordedStudentIds).ToList();
+            foreach (var studentId in missingStudentIds)
+            {
+                _context.AttendanceRecords.Add(new AttendanceRecord
+                {
+                    AttendanceSessionId = id,
+                    StudentId = studentId,
+                    Status = AttendanceStatus.Absent,
+                    CheckInTime = null,
+                    IsManualEdited = false,
+                    Note = "Auto-marked absent when session closed"
+                });
+            }
+
+            session.Status = SessionStatus.Closed;
+            session.ClosedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // === PRIVATE HELPERS ===
+
+        private IQueryable<AttendanceSession> QuerySessions()
+        {
+            return _context.AttendanceSessions
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Class)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Subject)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Lecturer).ThenInclude(l => l.User)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Semester)
+                .Include(s => s.Schedule)
+                .Include(s => s.AttendanceRecords)
+                .Where(s => !s.IsDeleted);
+        }
+
+        private static AttendanceSessionDto MapToDto(AttendanceSession s)
+        {
+            return new AttendanceSessionDto
+            {
+                Id = s.Id,
+                ClassSubjectId = s.ClassSubjectId,
+                ScheduleId = s.ScheduleId,
+                SessionDate = s.SessionDate,
+                Title = s.Title,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                LateAfterMinutes = s.LateAfterMinutes,
+                Status = s.Status.ToString(),
+                OpenedAt = s.OpenedAt,
+                ClosedAt = s.ClosedAt,
+                CreatedByLecturerId = s.CreatedByLecturerId,
+                ClassName = s.ClassSubject?.Class?.ClassName,
+                SubjectName = s.ClassSubject?.Subject?.SubjectName,
+                LecturerName = s.ClassSubject?.Lecturer?.User?.FullName,
+                Room = s.Schedule?.Room,
+                SemesterName = s.ClassSubject?.Semester?.Name,
+                TotalStudents = 0, // Computed from ClassStudents externally if needed
+                PresentCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Present && !r.IsDeleted) ?? 0,
+                AbsentCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Absent && !r.IsDeleted) ?? 0,
+                LateCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Late && !r.IsDeleted) ?? 0
+            };
+        }
+    }
+}

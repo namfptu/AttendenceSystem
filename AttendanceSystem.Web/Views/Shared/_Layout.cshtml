@@ -66,7 +66,7 @@
     </div>
     <ul class="nav flex-column mt-3">
       <li class="px-4 py-2"><small class="nav-text text-uppercase text-muted">Main</small></li>
-      <li><a class="nav-link" href="/"><i class="ti ti-home"></i><span class="nav-text">Dashboard</span></a></li>
+      <li><a class="nav-link" href="/Dashboard"><i class="ti ti-home"></i><span class="nav-text">Dashboard</span></a></li>
       
       @if (User.IsInRole("Admin"))
       {
@@ -82,8 +82,14 @@
       @if (User.IsInRole("Admin") || User.IsInRole("Lecturer") || User.IsInRole("Student"))
       {
           <li class="px-4 pt-4 pb-2"><small class="nav-text text-uppercase text-muted">Attendance</small></li>
-          <li><a class="nav-link" href="/Schedules"><i class="ti ti-calendar"></i><span class="nav-text">Schedules</span></a></li>
-          <li><a class="nav-link" href="/AttendanceSessions"><i class="ti ti-check"></i><span class="nav-text">Sessions</span></a></li>
+          @if (User.IsInRole("Admin"))
+          {
+              <li><a class="nav-link" href="/Schedules"><i class="ti ti-calendar"></i><span class="nav-text">Schedules</span></a></li>
+          }
+          @if (User.IsInRole("Admin") || User.IsInRole("Lecturer"))
+          {
+              <li><a class="nav-link" href="/AttendanceSessions"><i class="ti ti-check"></i><span class="nav-text">Sessions</span></a></li>
+          }
       }
     </ul>
   </aside>

@@ -12,6 +12,7 @@ namespace AttendanceSystem.Web.Services
         Task<TResponse?> PostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent content);
         Task<bool> PutAsync<TRequest>(string endpoint, TRequest data);
         Task<bool> DeleteAsync(string endpoint);
+        Task<HttpResponseMessage> PostRawAsync<TRequest>(string endpoint, TRequest data);
     }
 
     public class ApiClient : IApiClient
@@ -41,6 +42,11 @@ namespace AttendanceSystem.Web.Services
                 return await response.Content.ReadFromJsonAsync<TResponse>();
             }
             return default;
+        }
+
+        public async Task<HttpResponseMessage> PostRawAsync<TRequest>(string endpoint, TRequest data)
+        {
+            return await _httpClient.PostAsJsonAsync(endpoint, data);
         }
 
         public async Task<TResponse?> PostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent content)

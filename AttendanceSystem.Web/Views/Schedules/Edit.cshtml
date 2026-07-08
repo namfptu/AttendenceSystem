@@ -1,0 +1,68 @@
+@model AttendanceSystem.Business.DTOs.ScheduleDto
+@{
+    ViewData["Title"] = "Edit Schedule";
+    var classSubjects = ViewBag.ClassSubjects as IEnumerable<AttendanceSystem.Business.DTOs.ClassSubjectDto>;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h4><i class="ti ti-calendar-event me-2"></i>Edit Schedule</h4>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Course Section <span class="text-danger">*</span></label>
+                    <select asp-for="ClassSubjectId" class="form-select">
+                        @if (classSubjects != null)
+                        {
+                            @foreach (var cs in classSubjects)
+                            {
+                                <option value="@cs.Id" selected="@(cs.Id == Model.ClassSubjectId)">@cs.ClassCode - @cs.SubjectName (@cs.SemesterName)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Day of Week <span class="text-danger">*</span></label>
+                    <select asp-for="DayOfWeek" class="form-select">
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                        <option value="0">Sunday</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" name="StartTime" value="@Model.StartTime.ToString(@"hh\:mm")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" name="EndTime" value="@Model.EndTime.ToString(@"hh\:mm")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Room <span class="text-danger">*</span></label>
+                    <input asp-for="Room" class="form-control" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="ti ti-check me-1"></i>Update</button>
+                <a href="/Schedules" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
