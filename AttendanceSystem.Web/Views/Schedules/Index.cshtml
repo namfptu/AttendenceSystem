@@ -1,0 +1,83 @@
+@model IEnumerable<AttendanceSystem.Business.DTOs.ScheduleDto>
+@{
+    ViewData["Title"] = "Schedules";
+    var classSubjects = ViewBag.ClassSubjects as IEnumerable<AttendanceSystem.Business.DTOs.ClassSubjectDto>;
+    var selectedId = ViewBag.SelectedClassSubjectId as int?;
+}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="ti ti-calendar me-2"></i>Schedule Management</h4>
+        <a href="/Schedules/Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>Add Schedule</a>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <form method="get" asp-action="Index">
+            <div class="input-group">
+                <select name="classSubjectId" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- All Course Sections --</option>
+                    @if (classSubjects != null)
+                    {
+                        @foreach (var cs in classSubjects)
+                        {
+                            <option value="@cs.Id" selected="@(selectedId == cs.Id)">@cs.ClassCode - @cs.SubjectName</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["SuccessMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Course Section</th>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Room</th>
+                        <th>Lecturer</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int idx = 1; }
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@(idx++)</td>
+                            <td><strong>@item.ClassSubjectDisplay</strong></td>
+                            <td><span class="badge bg-info">@item.DayOfWeek</span></td>
+                            <td>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@item.Room</td>
+                            <td>@item.LecturerName</td>
+                            <td>
+                                <a href="/Schedules/Edit/@item.Id" class="btn btn-sm btn-outline-primary"><i class="ti ti-edit"></i></a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this schedule?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="ti ti-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">No schedules found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

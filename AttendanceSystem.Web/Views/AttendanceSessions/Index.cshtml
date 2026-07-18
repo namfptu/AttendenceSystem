@@ -1,0 +1,90 @@
+@model IEnumerable<AttendanceSystem.Business.DTOs.AttendanceSessionDto>
+@{
+    ViewData["Title"] = "Attendance Sessions";
+}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="ti ti-check me-2"></i>Attendance Sessions</h4>
+        <a href="/AttendanceSessions/Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>New Session</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["SuccessMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["ErrorMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Class - Subject</th>
+                        <th>Time</th>
+                        <th>Room</th>
+                        <th>Status</th>
+                        <th>Attendance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int idx = 1; }
+                    @foreach (var item in Model)
+                    {
+                        string badgeClass = item.Status switch
+                        {
+                            "Open" => "bg-success",
+                            "Closed" => "bg-secondary",
+                            _ => "bg-warning text-dark"
+                        };
+                        <tr>
+                            <td>@(idx++)</td>
+                            <td><strong>@item.SessionDate.ToString("dd/MM/yyyy")</strong></td>
+                            <td>@item.ClassName - @item.SubjectName</td>
+                            <td>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@item.Room</td>
+                            <td><span class="badge @badgeClass">@item.Status</span></td>
+                            <td>
+                                <span class="text-success">@item.PresentCount P</span> /
+                                <span class="text-danger">@item.AbsentCount A</span>
+                            </td>
+                            <td>
+                                @if (item.Status == "Pending")
+                                {
+                                    <form asp-action="Open" asp-route-id="@item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success" title="Open Session"><i class="ti ti-player-play"></i> Open</button>
+                                    </form>
+                                }
+                                @if (item.Status == "Open")
+                                {
+                                    <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-sm btn-primary" title="Take Attendance"><i class="ti ti-clipboard-check"></i> Attend</a>
+                                    <form asp-action="Close" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Close this session? Students without records will be marked Absent.')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Close Session"><i class="ti ti-player-stop"></i> Close</button>
+                                    </form>
+                                }
+                                @if (item.Status == "Closed")
+                                {
+                                    <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-sm btn-outline-secondary" title="View Attendance"><i class="ti ti-eye"></i> View</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="8" class="text-center text-muted py-4">No sessions found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -48,8 +48,15 @@ namespace AttendanceSystem.API.Controllers
                 return BadRequest("Subject Code is already taken.");
             }
 
-            var createdDto = await _subjectService.CreateAsync(subjectDto);
-            return CreatedAtAction(nameof(GetSubject), new { id = createdDto.Id }, createdDto);
+            try
+            {
+                var createdDto = await _subjectService.CreateAsync(subjectDto);
+                return CreatedAtAction(nameof(GetSubject), new { id = createdDto.Id }, createdDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT: api/Subjects/5
@@ -66,26 +73,40 @@ namespace AttendanceSystem.API.Controllers
                 return BadRequest("Subject Code is already taken.");
             }
 
-            var updatedDto = await _subjectService.UpdateAsync(id, subjectDto);
-            if (updatedDto == null)
+            try
             {
-                return NotFound();
-            }
+                var updatedDto = await _subjectService.UpdateAsync(id, subjectDto);
+                if (updatedDto == null)
+                {
+                    return NotFound();
+                }
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/Subjects/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubject(int id)
         {
-            var result = await _subjectService.DeleteAsync(id);
-            if (!result)
+            try
             {
-                return NotFound();
-            }
+                var result = await _subjectService.DeleteAsync(id);
+                if (!result)
+                {
+                    return NotFound();
+                }
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

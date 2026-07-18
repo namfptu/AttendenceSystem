@@ -41,6 +41,12 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<ClassStudentDto> AddStudentToClassAsync(int classId, int studentId)
         {
+            var exists = await _context.ClassStudents.AnyAsync(cs => cs.ClassId == classId && cs.StudentId == studentId && !cs.IsDeleted);
+            if (exists)
+            {
+                throw new InvalidOperationException("Sinh viên này đã có trong lớp.");
+            }
+
             var entity = new ClassStudent
             {
                 ClassId = classId,
