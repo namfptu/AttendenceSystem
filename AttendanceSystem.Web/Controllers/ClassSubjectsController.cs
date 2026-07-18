@@ -57,12 +57,14 @@ namespace AttendanceSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var created = await _apiClient.PostAsync<ClassSubjectDto, ClassSubjectDto>("ClassSubjects", model);
-                if (created != null)
+                var response = await _apiClient.PostRawAsync("ClassSubjects", model);
+                if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction(nameof(Index));
                 }
-                ModelState.AddModelError("", "Failed to assign. This assignment may already exist.");
+                
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", errorMsg ?? "Failed to assign. This assignment may already exist.");
             }
             await PopulateDropdowns();
             return View(model);
@@ -73,7 +75,14 @@ namespace AttendanceSystem.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _apiClient.DeleteAsync($"ClassSubjects/{id}");
+            var response = await _apiClient.DeleteRawAsync($"ClassSubjects/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            
+            var errorMsg = await response.Content.ReadAsStringAsync();
+            TempData["ErrorMessage"] = errorMsg ?? "Failed to delete assignment.";
             return RedirectToAction(nameof(Index));
         }
     }

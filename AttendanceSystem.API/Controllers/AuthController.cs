@@ -43,6 +43,9 @@ namespace AttendanceSystem.API.Controllers
                     Username = user.Username,
                     FullName = user.FullName,
                     Role = user.Role.ToString(),
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    AvatarUrl = user.AvatarUrl,
                     LecturerId = lecturerId,
                     StudentId = studentId
                 });

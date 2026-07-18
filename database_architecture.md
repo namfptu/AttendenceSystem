@@ -75,10 +75,10 @@ erDiagram
 
 **Dữ liệu mẫu:**
 
-| Id | SubjectCode | SubjectName | Credits |
-| :--- | :--- | :--- | :--- |
-| 50 | PRN231 | Build Cross-Platform Apps | 3 |
-| 51 | PRJ301 | Java Web Development | 3 |
+| Id | SubjectCode | SubjectName | Credits | TotalSlots |
+| :--- | :--- | :--- | :--- | :--- |
+| 50 | PRN231 | Build Cross-Platform Apps | 3 | 20 |
+| 51 | PRJ301 | Java Web Development | 3 | 20 |
 
 ---
 
@@ -149,7 +149,7 @@ erDiagram
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | 5000 (Sáng T2, 07/09)| 10 (Trần Văn B) | **Present** | 07:32:00 | NULL |
 | 2 | 5000 (Sáng T2, 07/09)| 11 (Lê Văn C) | **Absent** | NULL | NULL |
-| 3 | 5001 (Chủ nhật, 13/09)| 10 (Trần Văn B) | **Late** | 10:25:00 | Ngủ quên |
+| 3 | 5001 (Chủ nhật, 13/09)| 10 (Trần Văn B) | **Absent** | NULL | Ngủ quên |
 | 4 | 5001 (Chủ nhật, 13/09)| 11 (Lê Văn C) | **Present** | 10:02:00 | NULL |
 
 ---

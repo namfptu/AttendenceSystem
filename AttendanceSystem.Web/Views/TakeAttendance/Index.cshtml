@@ -79,19 +79,13 @@
                                             <input type="radio" class="btn-check" name="records[@idx].Status" value="Present" id="present_@record.StudentId" @(record.Status == "Present" ? "checked" : "") />
                                             <label class="btn btn-outline-success btn-sm" for="present_@record.StudentId"><i class="ti ti-check"></i> Present</label>
 
-                                            <input type="radio" class="btn-check" name="records[@idx].Status" value="Late" id="late_@record.StudentId" @(record.Status == "Late" ? "checked" : "") />
-                                            <label class="btn btn-outline-warning btn-sm" for="late_@record.StudentId"><i class="ti ti-clock"></i> Late</label>
-
                                             <input type="radio" class="btn-check" name="records[@idx].Status" value="Absent" id="absent_@record.StudentId" @(record.Status == "Absent" ? "checked" : "") />
                                             <label class="btn btn-outline-danger btn-sm" for="absent_@record.StudentId"><i class="ti ti-x"></i> Absent</label>
-
-                                            <input type="radio" class="btn-check" name="records[@idx].Status" value="Excused" id="excused_@record.StudentId" @(record.Status == "Excused" ? "checked" : "") />
-                                            <label class="btn btn-outline-info btn-sm" for="excused_@record.StudentId"><i class="ti ti-file-text"></i> Excused</label>
                                         </div>
                                     }
                                     else
                                     {
-                                        var bc = record.Status == "Present" ? "bg-success" : record.Status == "Late" ? "bg-warning text-dark" : record.Status == "Absent" ? "bg-danger" : record.Status == "Excused" ? "bg-info" : "bg-secondary";
+                                        var bc = record.Status == "Present" ? "bg-success" : record.Status == "Absent" ? "bg-danger" : "bg-secondary";
                                         <span class="badge @bc">@record.Status</span>
                                     }
                                 </td>

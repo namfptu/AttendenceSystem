@@ -12,7 +12,9 @@ namespace AttendanceSystem.Web.Services
         Task<TResponse?> PostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent content);
         Task<bool> PutAsync<TRequest>(string endpoint, TRequest data);
         Task<bool> DeleteAsync(string endpoint);
+        Task<HttpResponseMessage> DeleteRawAsync(string endpoint);
         Task<HttpResponseMessage> PostRawAsync<TRequest>(string endpoint, TRequest data);
+        Task<HttpResponseMessage> PutRawAsync<TRequest>(string endpoint, TRequest data);
     }
 
     public class ApiClient : IApiClient
@@ -65,10 +67,20 @@ namespace AttendanceSystem.Web.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<HttpResponseMessage> PutRawAsync<TRequest>(string endpoint, TRequest data)
+        {
+            return await _httpClient.PutAsJsonAsync(endpoint, data);
+        }
+
         public async Task<bool> DeleteAsync(string endpoint)
         {
             var response = await _httpClient.DeleteAsync(endpoint);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<HttpResponseMessage> DeleteRawAsync(string endpoint)
+        {
+            return await _httpClient.DeleteAsync(endpoint);
         }
     }
 }

@@ -49,16 +49,20 @@ namespace AttendanceSystem.Web.Controllers
             int lecturerId = !string.IsNullOrEmpty(lecturerIdStr) ? int.Parse(lecturerIdStr) : 0;
 
             // --- DEBUG LOGGING ---
-            var logPath = @"d:\PRN232\AttendenceSystem\debug_log.txt";
-            System.IO.File.AppendAllText(logPath, $"--- Submit Called at {System.DateTime.Now} ---\n");
-            System.IO.File.AppendAllText(logPath, $"SessionId: {model.AttendanceSessionId}\n");
-            System.IO.File.AppendAllText(logPath, $"Records Count: {model.Records?.Count ?? 0}\n");
-            if (model.Records != null)
+            var logPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "debug_log.txt");
+            try 
             {
-                foreach(var r in model.Records) {
-                    System.IO.File.AppendAllText(logPath, $" - StudentId: {r.StudentId}, Status: {r.Status}, Note: {r.Note}\n");
+                System.IO.File.AppendAllText(logPath, $"--- Submit Called at {System.DateTime.Now} ---\n");
+                System.IO.File.AppendAllText(logPath, $"SessionId: {model.AttendanceSessionId}\n");
+                System.IO.File.AppendAllText(logPath, $"Records Count: {model.Records?.Count ?? 0}\n");
+                if (model.Records != null)
+                {
+                    foreach(var r in model.Records) {
+                        System.IO.File.AppendAllText(logPath, $" - StudentId: {r.StudentId}, Status: {r.Status}, Note: {r.Note}\n");
+                    }
                 }
-            }
+            } 
+            catch { /* Ignore logging errors in production */ }
             // ---------------------
 
             var dto = new TakeAttendanceDto
@@ -84,7 +88,9 @@ namespace AttendanceSystem.Web.Controllers
             var res = await _apiClient.PostRawAsync($"AttendanceRecords/TakeAttendance?lecturerId={lecturerId}", dto);
             var resBody = await res.Content.ReadAsStringAsync();
             
-            System.IO.File.AppendAllText(logPath, $"API StatusCode: {res.StatusCode}\nAPI Response Body: {resBody}\n");
+            try {
+                System.IO.File.AppendAllText(logPath, $"API StatusCode: {res.StatusCode}\nAPI Response Body: {resBody}\n");
+            } catch {}
 
             if (res.IsSuccessStatusCode || dto.Records.Count == 0)
             {

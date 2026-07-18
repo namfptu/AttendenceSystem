@@ -59,6 +59,49 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<AttendanceSessionDto> CreateAsync(AttendanceSessionDto dto)
         {
+            if (dto.StartTime >= dto.EndTime)
+                throw new InvalidOperationException("StartTime must be before EndTime.");
+
+            var classSubject = await _context.ClassSubjects
+                .Include(cs => cs.Semester)
+                .Include(cs => cs.Subject)
+                .FirstOrDefaultAsync(cs => cs.Id == dto.ClassSubjectId && !cs.IsDeleted);
+                
+            if (classSubject == null)
+                throw new InvalidOperationException("ClassSubject not found or deleted.");
+
+            if (dto.SessionDate.Date < classSubject.Semester.StartDate.Date || dto.SessionDate.Date > classSubject.Semester.EndDate.Date)
+                throw new InvalidOperationException($"Session date must be within semester dates ({classSubject.Semester.StartDate:dd/MM/yyyy} - {classSubject.Semester.EndDate:dd/MM/yyyy}).");
+
+            var existingCount = await _context.AttendanceSessions
+                .CountAsync(s => s.ClassSubjectId == dto.ClassSubjectId && !s.IsDeleted);
+            var totalSlots = classSubject.Subject.TotalSlots > 0 ? classSubject.Subject.TotalSlots : 20;
+            if (existingCount >= totalSlots)
+                throw new InvalidOperationException($"Cannot create more than {totalSlots} sessions for this subject.");
+
+            var overlap = await _context.AttendanceSessions
+                .AnyAsync(s => s.ClassSubjectId == dto.ClassSubjectId 
+                            && s.SessionDate.Date == dto.SessionDate.Date 
+                            && !s.IsDeleted
+                            && ((dto.StartTime >= s.StartTime && dto.StartTime < s.EndTime) 
+                             || (dto.EndTime > s.StartTime && dto.EndTime <= s.EndTime)
+                             || (dto.StartTime <= s.StartTime && dto.EndTime >= s.EndTime)));
+            if (overlap)
+                throw new InvalidOperationException("Time overlaps with an existing session of this class on the same day.");
+
+            if (dto.ScheduleId.HasValue)
+            {
+                var existing = await _context.AttendanceSessions
+                    .AnyAsync(s => s.ClassSubjectId == dto.ClassSubjectId 
+                                && s.ScheduleId == dto.ScheduleId 
+                                && s.SessionDate.Date == dto.SessionDate.Date 
+                                && !s.IsDeleted);
+                if (existing)
+                {
+                    throw new InvalidOperationException("A session for this schedule and date already exists.");
+                }
+            }
+
             var session = new AttendanceSession
             {
                 ClassSubjectId = dto.ClassSubjectId,
@@ -171,8 +214,7 @@ namespace AttendanceSystem.Business.Services
                 SemesterName = s.ClassSubject?.Semester?.Name,
                 TotalStudents = 0, // Computed from ClassStudents externally if needed
                 PresentCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Present && !r.IsDeleted) ?? 0,
-                AbsentCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Absent && !r.IsDeleted) ?? 0,
-                LateCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Late && !r.IsDeleted) ?? 0
+                AbsentCount = s.AttendanceRecords?.Count(r => r.Status == AttendanceStatus.Absent && !r.IsDeleted) ?? 0
             };
         }
     }

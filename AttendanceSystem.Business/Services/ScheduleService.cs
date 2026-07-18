@@ -97,6 +97,28 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<ScheduleDto> CreateAsync(ScheduleDto dto)
         {
+            var classSubject = await _context.ClassSubjects.FirstOrDefaultAsync(cs => cs.Id == dto.ClassSubjectId);
+            if (classSubject != null)
+            {
+                bool lecturerOverlap = await _context.Schedules.Include(s => s.ClassSubject)
+                    .AnyAsync(s => !s.IsDeleted && s.DayOfWeek == dto.DayOfWeek 
+                                && s.ClassSubject.LecturerId == classSubject.LecturerId 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (lecturerOverlap) throw new Exception("Giảng viên đã có lịch dạy bị trùng giờ trong ngày này.");
+
+                bool roomOverlap = await _context.Schedules
+                    .AnyAsync(s => !s.IsDeleted && s.DayOfWeek == dto.DayOfWeek 
+                                && s.Room == dto.Room 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (roomOverlap) throw new Exception("Phòng học đã được xếp lịch trùng giờ trong ngày này.");
+
+                bool classOverlap = await _context.Schedules.Include(s => s.ClassSubject)
+                    .AnyAsync(s => !s.IsDeleted && s.DayOfWeek == dto.DayOfWeek 
+                                && s.ClassSubject.ClassId == classSubject.ClassId 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (classOverlap) throw new Exception("Lớp học đã có môn học khác bị trùng giờ trong ngày này.");
+            }
+
             var schedule = new Schedule
             {
                 ClassSubjectId = dto.ClassSubjectId,
@@ -117,6 +139,28 @@ namespace AttendanceSystem.Business.Services
         {
             var schedule = await _context.Schedules.FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
             if (schedule == null) return null;
+
+            var classSubject = await _context.ClassSubjects.FirstOrDefaultAsync(cs => cs.Id == dto.ClassSubjectId);
+            if (classSubject != null)
+            {
+                bool lecturerOverlap = await _context.Schedules.Include(s => s.ClassSubject)
+                    .AnyAsync(s => !s.IsDeleted && s.Id != id && s.DayOfWeek == dto.DayOfWeek 
+                                && s.ClassSubject.LecturerId == classSubject.LecturerId 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (lecturerOverlap) throw new Exception("Giảng viên đã có lịch dạy bị trùng giờ trong ngày này.");
+
+                bool roomOverlap = await _context.Schedules
+                    .AnyAsync(s => !s.IsDeleted && s.Id != id && s.DayOfWeek == dto.DayOfWeek 
+                                && s.Room == dto.Room 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (roomOverlap) throw new Exception("Phòng học đã được xếp lịch trùng giờ trong ngày này.");
+
+                bool classOverlap = await _context.Schedules.Include(s => s.ClassSubject)
+                    .AnyAsync(s => !s.IsDeleted && s.Id != id && s.DayOfWeek == dto.DayOfWeek 
+                                && s.ClassSubject.ClassId == classSubject.ClassId 
+                                && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
+                if (classOverlap) throw new Exception("Lớp học đã có môn học khác bị trùng giờ trong ngày này.");
+            }
 
             schedule.ClassSubjectId = dto.ClassSubjectId;
             schedule.DayOfWeek = dto.DayOfWeek;

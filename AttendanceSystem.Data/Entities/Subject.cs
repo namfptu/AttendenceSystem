@@ -25,6 +25,11 @@ namespace AttendanceSystem.Data.Entities
         /// </summary>
         public int Credits { get; set; }
 
+        /// <summary>
+        /// Tổng số slot (buổi học) của môn học.
+        /// </summary>
+        public int TotalSlots { get; set; } = 20;
+
         public string Description { get; set; }
 
         // Navigation properties

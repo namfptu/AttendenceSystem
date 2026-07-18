@@ -39,17 +39,19 @@ namespace AttendanceSystem.Business.Services
                     .Where(r => sessions.Contains(r.AttendanceSessionId) && r.StudentId == studentId && !r.IsDeleted)
                     .ToListAsync();
 
-                int total = sessions.Count;
+                int completed = sessions.Count;
+                int totalSlots = cs.Subject.TotalSlots > 0 ? cs.Subject.TotalSlots : 20; // fallback to 20
                 int absent = records.Count(r => r.Status == AttendanceStatus.Absent);
-                double pct = total > 0 ? Math.Round((double)absent / total * 100, 1) : 0;
+                double pct = Math.Round((double)absent / totalSlots * 100, 1);
 
                 courses.Add(new StudentCourseAttendanceDto
                 {
                     ClassSubjectId = cs.Id, SubjectName = cs.Subject.SubjectName, SubjectCode = cs.Subject.SubjectCode,
                     ClassName = cs.Class.ClassName, LecturerName = cs.Lecturer.User.FullName,
-                    TotalSessions = total, PresentCount = records.Count(r => r.Status == AttendanceStatus.Present),
-                    LateCount = records.Count(r => r.Status == AttendanceStatus.Late), AbsentCount = absent,
-                    ExcusedCount = records.Count(r => r.Status == AttendanceStatus.Excused),
+                    CompletedSessions = completed,
+                    TotalSlots = totalSlots,
+                    PresentCount = records.Count(r => r.Status == AttendanceStatus.Present),
+                    AbsentCount = absent,
                     AbsentPercentage = pct, IsBanned = pct > 20
                 });
             }
@@ -76,11 +78,16 @@ namespace AttendanceSystem.Business.Services
             foreach (var sch in schedules)
             {
                 var session = await _context.AttendanceSessions
-                    .FirstOrDefaultAsync(s => s.ClassSubjectId == sch.ClassSubjectId && s.SessionDate.Date == today && !s.IsDeleted);
+                    .FirstOrDefaultAsync(s => s.ClassSubjectId == sch.ClassSubjectId 
+                                           && s.SessionDate.Date == today 
+                                           && (s.ScheduleId == sch.Id || (s.ScheduleId == null && s.StartTime == sch.StartTime))
+                                           && !s.IsDeleted);
 
                 todayClasses.Add(new LecturerTodayClassDto
                 {
-                    ClassSubjectId = sch.ClassSubjectId, ClassName = sch.ClassSubject.Class.ClassName,
+                    ClassSubjectId = sch.ClassSubjectId, 
+                    ScheduleId = sch.Id,
+                    ClassName = sch.ClassSubject.Class.ClassName,
                     SubjectName = sch.ClassSubject.Subject.SubjectName, StartTime = sch.StartTime,
                     EndTime = sch.EndTime, Room = sch.Room,
                     SessionId = session?.Id, SessionStatus = session?.Status.ToString()
@@ -102,7 +109,7 @@ namespace AttendanceSystem.Business.Services
                 if (totalSessions > 0 && totalStudents > 0)
                 {
                     totalPresent = await _context.AttendanceRecords
-                        .CountAsync(r => r.AttendanceSession.ClassSubjectId == cs.Id && (r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late) && !r.IsDeleted);
+                        .CountAsync(r => r.AttendanceSession.ClassSubjectId == cs.Id && r.Status == AttendanceStatus.Present && !r.IsDeleted);
                 }
                 double rate = (totalSessions > 0 && totalStudents > 0) ? Math.Round((double)totalPresent / (totalSessions * totalStudents) * 100, 1) : 0;
 

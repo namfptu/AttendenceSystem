@@ -22,7 +22,7 @@ namespace AttendanceSystem.Business.Services
             if (cs == null) return null;
 
             var sessions = await _context.AttendanceSessions
-                .Where(s => s.ClassSubjectId == classSubjectId && s.Status == SessionStatus.Closed && !s.IsDeleted)
+                .Where(s => s.ClassSubjectId == classSubjectId && s.Status != SessionStatus.Pending && !s.IsDeleted)
                 .OrderBy(s => s.SessionDate).ToListAsync();
 
             var students = await _context.ClassStudents
@@ -94,9 +94,7 @@ namespace AttendanceSystem.Business.Services
             return status switch
             {
                 AttendanceStatus.Present => "P",
-                AttendanceStatus.Late => "L",
                 AttendanceStatus.Absent => "A",
-                AttendanceStatus.Excused => "E",
                 _ => "-"
             };
         }

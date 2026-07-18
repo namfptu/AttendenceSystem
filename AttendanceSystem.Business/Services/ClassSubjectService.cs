@@ -80,6 +80,20 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<ClassSubjectDto> CreateAsync(ClassSubjectDto dto)
         {
+            var exists = await ExistsAsync(dto.ClassId, dto.SubjectId, dto.SemesterId);
+            if (exists) throw new InvalidOperationException("Lớp này đã được phân công môn học này trong học kỳ này.");
+
+            var semester = await _context.Semesters.FindAsync(dto.SemesterId);
+            var subject = await _context.Subjects.FindAsync(dto.SubjectId);
+            if (semester != null && subject != null)
+            {
+                double weeks = (semester.EndDate - semester.StartDate).TotalDays / 7.0;
+                if (weeks > 0 && subject.TotalSlots > weeks * 4)
+                {
+                    throw new InvalidOperationException($"Học kỳ {semester.Name} quá ngắn ({Math.Round(weeks, 1)} tuần) để hoàn thành môn học {subject.SubjectCode} ({subject.TotalSlots} slots, tối đa {Math.Round(weeks * 4)} slots).");
+                }
+            }
+
             var entity = new ClassSubject
             {
                 ClassId = dto.ClassId,
@@ -99,6 +113,20 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<ClassSubjectDto?> UpdateAsync(int id, ClassSubjectDto dto)
         {
+            var exists = await ExistsAsync(dto.ClassId, dto.SubjectId, dto.SemesterId, id);
+            if (exists) throw new InvalidOperationException("Lớp này đã được phân công môn học này trong học kỳ này.");
+
+            var semester = await _context.Semesters.FindAsync(dto.SemesterId);
+            var subject = await _context.Subjects.FindAsync(dto.SubjectId);
+            if (semester != null && subject != null)
+            {
+                double weeks = (semester.EndDate - semester.StartDate).TotalDays / 7.0;
+                if (weeks > 0 && subject.TotalSlots > weeks * 4)
+                {
+                    throw new InvalidOperationException($"Học kỳ {semester.Name} quá ngắn ({Math.Round(weeks, 1)} tuần) để hoàn thành môn học {subject.SubjectCode} ({subject.TotalSlots} slots, tối đa {Math.Round(weeks * 4)} slots).");
+                }
+            }
+
             var entity = await _context.ClassSubjects.FirstOrDefaultAsync(cs => cs.Id == id && !cs.IsDeleted);
             if (entity == null) return null;
 

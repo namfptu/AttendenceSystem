@@ -46,14 +46,17 @@ namespace AttendanceSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Try to get LecturerId from claims
                 var lecturerIdStr = User.FindFirstValue("LecturerId");
                 if (!string.IsNullOrEmpty(lecturerIdStr))
                     model.CreatedByLecturerId = int.Parse(lecturerIdStr);
 
-                var created = await _apiClient.PostAsync<AttendanceSessionDto, AttendanceSessionDto>("AttendanceSessions", model);
-                if (created != null) return RedirectToAction(nameof(Index));
-                ModelState.AddModelError("", "Failed to create session.");
+                var res = await _apiClient.PostRawAsync("AttendanceSessions", model);
+                if (res.IsSuccessStatusCode)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                var err = await res.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", string.IsNullOrEmpty(err) ? "Failed to create session." : err);
             }
             var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
             ViewBag.ClassSubjects = classSubjects;
@@ -62,9 +65,49 @@ namespace AttendanceSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAndOpen(AttendanceSessionDto model)
+        {
+            // Trích xuất LecturerId
+            var lecturerIdStr = User.FindFirstValue("LecturerId");
+            if (!string.IsNullOrEmpty(lecturerIdStr))
+                model.CreatedByLecturerId = int.Parse(lecturerIdStr);
+
+            // Gọi API tạo Session (trả về id)
+            var created = await _apiClient.PostAsync<AttendanceSessionDto, AttendanceSessionDto>("AttendanceSessions", model);
+            
+            if (created != null && created.Id > 0)
+            {
+                bool isAdmin = User.IsInRole("Admin");
+                var res = await _apiClient.PutRawAsync($"AttendanceSessions/{created.Id}/Open?isAdmin={isAdmin}", new { });
+                if (res.IsSuccessStatusCode)
+                {
+                    // Redirect thẳng tới màn hình Take Attendance
+                    return RedirectToAction("Index", "TakeAttendance", new { sessionId = created.Id });
+                }
+                else
+                {
+                    // Lỗi validation (ví dụ: mở quá sớm)
+                    var err = await res.Content.ReadAsStringAsync();
+                    TempData["ErrorMessage"] = err;
+                    return RedirectToAction("Index", "Dashboard");
+                }
+            }
+            
+            TempData["ErrorMessage"] = "Failed to create session.";
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Open(int id)
         {
-            await _apiClient.PutAsync($"AttendanceSessions/{id}/Open", new { });
+            bool isAdmin = User.IsInRole("Admin");
+            var res = await _apiClient.PutRawAsync($"AttendanceSessions/{id}/Open?isAdmin={isAdmin}", new { });
+            if (!res.IsSuccessStatusCode)
+            {
+                var err = await res.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = string.IsNullOrEmpty(err) ? "Cannot open session." : err;
+            }
             return RedirectToAction(nameof(Index));
         }
 

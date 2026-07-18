@@ -5,6 +5,13 @@
 
 <div class="row">
     <div class="col-12">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ti ti-alert-triangle me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Subject Management</h4>
@@ -17,6 +24,7 @@
                             <th>Subject Code</th>
                             <th>Subject Name</th>
                             <th>Credits</th>
+                            <th>Total Slots</th>
                             <th>Description</th>
                             <th>Action</th>
                         </tr>
@@ -28,6 +36,7 @@
                                 <td>@item.SubjectCode</td>
                                 <td>@item.SubjectName</td>
                                 <td>@item.Credits</td>
+                                <td>@item.TotalSlots</td>
                                 <td>@item.Description</td>
                                 <td>
                                     <a href="/Subjects/Edit/@item.Id" class="text-primary me-2"><i class="ti ti-edit fs-5"></i></a>

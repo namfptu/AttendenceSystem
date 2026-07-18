@@ -18,11 +18,10 @@ namespace AttendanceSystem.Business.DTOs
         public string SubjectCode { get; set; }
         public string ClassName { get; set; }
         public string LecturerName { get; set; }
-        public int TotalSessions { get; set; }
+        public int CompletedSessions { get; set; }
+        public int TotalSlots { get; set; }
         public int PresentCount { get; set; }
-        public int LateCount { get; set; }
         public int AbsentCount { get; set; }
-        public int ExcusedCount { get; set; }
         public double AbsentPercentage { get; set; }
         public bool IsBanned { get; set; } // true if absent > 20%
     }
@@ -39,6 +38,7 @@ namespace AttendanceSystem.Business.DTOs
     public class LecturerTodayClassDto
     {
         public int ClassSubjectId { get; set; }
+        public int ScheduleId { get; set; }
         public string ClassName { get; set; }
         public string SubjectName { get; set; }
         public TimeSpan StartTime { get; set; }

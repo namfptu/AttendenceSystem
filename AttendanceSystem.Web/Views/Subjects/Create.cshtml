@@ -31,6 +31,12 @@
                         <span asp-validation-for="Credits" class="text-danger small"></span>
                     </div>
 
+                    <div class="mb-3">
+                        <label asp-for="TotalSlots" class="form-label">Total Slots</label>
+                        <input asp-for="TotalSlots" type="number" class="form-control" required min="1" value="20" />
+                        <span asp-validation-for="TotalSlots" class="text-danger small"></span>
+                    </div>
+
                     <div class="mb-4">
                         <label asp-for="Description" class="form-label">Description</label>
                         <textarea asp-for="Description" class="form-control" rows="3"></textarea>

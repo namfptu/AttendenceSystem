@@ -52,10 +52,6 @@
                     <label class="form-label">End Time <span class="text-danger">*</span></label>
                     <input type="time" class="form-control" name="EndTime" value="@Model.EndTime.ToString(@"hh\:mm")" />
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Late After (minutes)</label>
-                    <input asp-for="LateAfterMinutes" class="form-control" type="number" />
-                </div>
                 <div class="col-md-6 mb-3 d-none">
                     <label asp-for="CreatedByLecturerId" class="form-label">Created By (Lecturer ID)</label>
                     <input asp-for="CreatedByLecturerId" type="number" class="form-control" />

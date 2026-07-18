@@ -46,7 +46,18 @@
                         }
                         else
                         {
-                            <span class="badge bg-light text-dark">No session yet</span>
+                            <span class="badge bg-light text-dark me-2">No session yet</span>
+                            <form asp-controller="AttendanceSessions" asp-action="CreateAndOpen" method="post" class="d-inline">
+                                <input type="hidden" name="ClassSubjectId" value="@cls.ClassSubjectId" />
+                                <input type="hidden" name="ScheduleId" value="@cls.ScheduleId" />
+                                <input type="hidden" name="SessionDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="Title" value="Lớp học @DateTime.Now.ToString("dd/MM/yyyy")" />
+                                <input type="hidden" name="StartTime" value="@cls.StartTime.ToString(@"hh\:mm\:ss")" />
+                                <input type="hidden" name="EndTime" value="@cls.EndTime.ToString(@"hh\:mm\:ss")" />
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="ti ti-bolt me-1"></i>Open Session
+                                </button>
+                            </form>
                         }
                     </div>
                 </div>

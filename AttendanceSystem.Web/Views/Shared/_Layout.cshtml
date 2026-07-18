@@ -12,6 +12,13 @@
   <link rel="stylesheet" crossorigin href="~/assets/css/main.css">
   @await RenderSectionAsync("Styles", required: false)
 </head>
+@{
+    var avatarUrl = User.Claims.FirstOrDefault(c => c.Type == "AvatarUrl")?.Value;
+    if (string.IsNullOrEmpty(avatarUrl)) {
+        avatarUrl = "/assets/images/avatar-1.jpg";
+    }
+}
+
 
 <body>
   <div id="overlay" class="overlay"></div>
@@ -32,12 +39,12 @@
         <!-- Dropdown -->
         <li class="ms-3 dropdown">
           <a href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="~/assets/images/avatar-1.jpg" alt="User Avatar" class="avatar avatar-sm rounded-circle" />
+            <img src="@avatarUrl" alt="User Avatar" class="avatar avatar-sm rounded-circle" style="object-fit:cover;" />
           </a>
           <div class="dropdown-menu dropdown-menu-end p-0" style="min-width: 200px;">
             <div>
               <div class="d-flex gap-3 align-items-center border-dashed border-bottom px-3 py-3">
-                <img src="~/assets/images/avatar-1.jpg" alt="" class="avatar avatar-md rounded-circle" />
+                <img src="@avatarUrl" alt="" class="avatar avatar-md rounded-circle" style="object-fit:cover;" />
                 <div>
                   <h4 class="mb-0 small">@User.Identity?.Name</h4>
                   <p class="mb-0 small text-muted">@(User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value)</p>

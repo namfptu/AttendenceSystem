@@ -33,17 +33,18 @@ namespace AttendanceSystem.Web.Controllers
         // POST: Subjects/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SubjectCode,SubjectName,Credits,Description")] SubjectDto model)
+        public async Task<IActionResult> Create([Bind("SubjectCode,SubjectName,Credits,TotalSlots,Description")] SubjectDto model)
         {
             if (ModelState.IsValid)
             {
-                var created = await _apiClient.PostAsync<SubjectDto, SubjectDto>("Subjects", model);
-                if (created != null)
+                var response = await _apiClient.PostRawAsync("Subjects", model);
+                if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction(nameof(Index));
                 }
                 
-                ModelState.AddModelError("", "Failed to create subject. Code might be duplicated.");
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", errorMsg ?? "Failed to create subject. Code might be duplicated.");
             }
             return View(model);
         }
@@ -63,19 +64,20 @@ namespace AttendanceSystem.Web.Controllers
         // POST: Subjects/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SubjectCode,SubjectName,Credits,Description")] SubjectDto model)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,SubjectCode,SubjectName,Credits,TotalSlots,Description")] SubjectDto model)
         {
             if (id != model.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
-                var success = await _apiClient.PutAsync($"Subjects/{id}", model);
-                if (success)
+                var response = await _apiClient.PutRawAsync($"Subjects/{id}", model);
+                if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
-                ModelState.AddModelError("", "Failed to update subject. Code might be duplicated.");
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", errorMsg ?? "Failed to update subject. Code might be duplicated.");
             }
             return View(model);
         }
@@ -85,7 +87,13 @@ namespace AttendanceSystem.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _apiClient.DeleteAsync($"Subjects/{id}");
+            var response = await _apiClient.DeleteRawAsync($"Subjects/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            var errorMsg = await response.Content.ReadAsStringAsync();
+            TempData["ErrorMessage"] = errorMsg ?? "Failed to delete subject.";
             return RedirectToAction(nameof(Index));
         }
     }

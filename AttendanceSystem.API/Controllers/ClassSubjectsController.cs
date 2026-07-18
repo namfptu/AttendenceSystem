@@ -48,8 +48,15 @@ namespace AttendanceSystem.API.Controllers
                 return BadRequest("This class is already assigned to this subject in the given semester.");
             }
 
-            var createdDto = await _classSubjectService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetClassSubject), new { id = createdDto.Id }, createdDto);
+            try
+            {
+                var createdDto = await _classSubjectService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetClassSubject), new { id = createdDto.Id }, createdDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT: api/ClassSubjects/5
@@ -66,13 +73,20 @@ namespace AttendanceSystem.API.Controllers
                 return BadRequest("This class is already assigned to this subject in the given semester.");
             }
 
-            var updatedDto = await _classSubjectService.UpdateAsync(id, dto);
-            if (updatedDto == null)
+            try
             {
-                return NotFound();
-            }
+                var updatedDto = await _classSubjectService.UpdateAsync(id, dto);
+                if (updatedDto == null)
+                {
+                    return NotFound();
+                }
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/ClassSubjects/5

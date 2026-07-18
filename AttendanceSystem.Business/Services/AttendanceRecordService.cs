@@ -61,8 +61,22 @@ namespace AttendanceSystem.Business.Services
         public async Task<bool> SaveAttendanceAsync(TakeAttendanceDto dto, int lecturerId)
         {
             var session = await _context.AttendanceSessions
+                .Include(s => s.ClassSubject)
                 .FirstOrDefaultAsync(s => s.Id == dto.AttendanceSessionId && !s.IsDeleted);
             if (session == null) return false;
+
+            if (session.Status == SessionStatus.Closed && lecturerId > 0)
+                return false; // Lecturer cannot edit closed sessions
+
+            if (lecturerId > 0 && session.ClassSubject.LecturerId != lecturerId)
+            {
+                // Check if they are a valid substitute
+                var isSubstitute = await _context.ClassSubstitutes
+                    .AnyAsync(cs => cs.ClassSubjectId == session.ClassSubjectId 
+                                 && cs.LecturerId == lecturerId 
+                                 && cs.SubstituteDate.Date == session.SessionDate.Date);
+                if (!isSubstitute) return false;
+            }
 
             var existingRecords = await _context.AttendanceRecords
                 .Where(ar => ar.AttendanceSessionId == dto.AttendanceSessionId && !ar.IsDeleted)
@@ -72,7 +86,7 @@ namespace AttendanceSystem.Business.Services
             {
                 Enum.TryParse<AttendanceStatus>(recordDto.Status, out var status);
                 var existing = existingRecords.FirstOrDefault(r => r.StudentId == recordDto.StudentId);
-                var checkInTime = (status == AttendanceStatus.Present || status == AttendanceStatus.Late) ? DateTime.UtcNow : (DateTime?)null;
+                var checkInTime = status == AttendanceStatus.Present ? DateTime.UtcNow : (DateTime?)null;
 
                 if (existing != null)
                 {
@@ -99,11 +113,23 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<bool> UpdateRecordAsync(int recordId, AttendanceRecordDto dto, int lecturerId)
         {
-            var record = await _context.AttendanceRecords.FirstOrDefaultAsync(r => r.Id == recordId && !r.IsDeleted);
+            var record = await _context.AttendanceRecords
+                .Include(r => r.AttendanceSession).ThenInclude(s => s.ClassSubject)
+                .FirstOrDefaultAsync(r => r.Id == recordId && !r.IsDeleted);
             if (record == null) return false;
+
+            if (record.AttendanceSession.Status == SessionStatus.Closed && lecturerId > 0)
+                return false; // Lecturer cannot edit closed sessions
+
+            if (lecturerId > 0 && record.AttendanceSession.ClassSubject.LecturerId != lecturerId) return false;
+
             if (!Enum.TryParse<AttendanceStatus>(dto.Status, out var status)) return false;
 
             record.Status = status;
+            if (status == AttendanceStatus.Absent)
+            {
+                record.CheckInTime = null;
+            }
             record.Note = dto.Note ?? string.Empty;
             record.IsManualEdited = true;
             record.EditedByLecturerId = lecturerId;
