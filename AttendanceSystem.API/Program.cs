@@ -29,6 +29,7 @@ namespace AttendanceSystem.API
             builder.Services.AddScoped<IAttendanceRecordService, AttendanceRecordService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<IExportService, ExportService>();
+            builder.Services.AddScoped<IClassSubstituteService, ClassSubstituteService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
