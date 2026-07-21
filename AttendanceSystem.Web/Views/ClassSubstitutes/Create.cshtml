@@ -1,0 +1,54 @@
+@model AttendanceSystem.Business.DTOs.ClassSubstituteDto
+@{
+    ViewData["Title"] = "Add Substitute Assignment";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Add Substitute Assignment</h4>
+                <p class="card-title-desc">Assign a substitute lecturer to teach and take attendance for a class on a specific date.</p>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="ClassSubjectId" class="form-label">Course Section (Class - Subject)</label>
+                        <select asp-for="ClassSubjectId" class="form-select" asp-items="ViewBag.ClassSubjects" required>
+                            <option value="">-- Select Course Section --</option>
+                        </select>
+                        <span asp-validation-for="ClassSubjectId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LecturerId" class="form-label">Substitute Lecturer</label>
+                        <select asp-for="LecturerId" class="form-select" asp-items="ViewBag.Lecturers" required>
+                            <option value="">-- Select Substitute Lecturer --</option>
+                        </select>
+                        <span asp-validation-for="LecturerId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SubstituteDate" class="form-label">Substitute Date</label>
+                        <input asp-for="SubstituteDate" type="date" class="form-control" required />
+                        <span asp-validation-for="SubstituteDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Note" class="form-label">Note / Reason</label>
+                        <textarea asp-for="Note" class="form-control" rows="3" placeholder="Reason for substitute (e.g., Illness, Business trip)"></textarea>
+                        <span asp-validation-for="Note" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/ClassSubstitutes" class="btn btn-secondary">Back to List</a>
+                        <button type="submit" class="btn btn-primary">Save Assignment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
