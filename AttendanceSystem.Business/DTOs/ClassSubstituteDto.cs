@@ -8,13 +8,13 @@ namespace AttendanceSystem.Business.DTOs
         public int ClassSubjectId { get; set; }
         public int LecturerId { get; set; }
         public DateTime SubstituteDate { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         // Extra Display Properties
-        public string ClassCode { get; set; }
-        public string SubjectCode { get; set; }
-        public string SubjectName { get; set; }
-        public string PrimaryLecturerName { get; set; }
-        public string SubstituteLecturerName { get; set; }
+        public string? ClassCode { get; set; }
+        public string? SubjectCode { get; set; }
+        public string? SubjectName { get; set; }
+        public string? PrimaryLecturerName { get; set; }
+        public string? SubstituteLecturerName { get; set; }
     }
 }
