@@ -1,90 +1,176 @@
 @model IEnumerable<AttendanceSystem.Business.DTOs.AttendanceSessionDto>
 @{
     ViewData["Title"] = "Attendance Sessions";
+    var groupedSessions = Model.GroupBy(s => s.SessionDate.Date)
+                               .OrderByDescending(g => g.Key);
 }
 
 <div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
+    <div class="col-12">
         <h4 class="mb-0"><i class="ti ti-check me-2"></i>Attendance Sessions</h4>
-        <a href="/AttendanceSessions/Create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>New Session</a>
     </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show">@TempData["SuccessMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show">@TempData["ErrorMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
-
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Date</th>
-                        <th>Class - Subject</th>
-                        <th>Time</th>
-                        <th>Room</th>
-                        <th>Status</th>
-                        <th>Attendance</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{ int idx = 1; }
-                    @foreach (var item in Model)
-                    {
-                        string badgeClass = item.Status switch
-                        {
-                            "Open" => "bg-success",
-                            "Closed" => "bg-secondary",
-                            _ => "bg-warning text-dark"
-                        };
-                        <tr>
-                            <td>@(idx++)</td>
-                            <td><strong>@item.SessionDate.ToString("dd/MM/yyyy")</strong></td>
-                            <td>@item.ClassName - @item.SubjectName</td>
-                            <td>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</td>
-                            <td>@item.Room</td>
-                            <td><span class="badge @badgeClass">@item.Status</span></td>
-                            <td>
-                                <span class="text-success">@item.PresentCount P</span> /
-                                <span class="text-danger">@item.AbsentCount A</span>
-                            </td>
-                            <td>
-                                @if (item.Status == "Pending")
-                                {
-                                    <form asp-action="Open" asp-route-id="@item.Id" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-success" title="Open Session"><i class="ti ti-player-play"></i> Open</button>
-                                    </form>
-                                }
-                                @if (item.Status == "Open")
-                                {
-                                    <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-sm btn-primary" title="Take Attendance"><i class="ti ti-clipboard-check"></i> Attend</a>
-                                    <form asp-action="Close" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Close this session? Students without records will be marked Absent.')">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-warning" title="Close Session"><i class="ti ti-player-stop"></i> Close</button>
-                                    </form>
-                                }
-                                @if (item.Status == "Closed")
-                                {
-                                    <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-sm btn-outline-secondary" title="View Attendance"><i class="ti ti-eye"></i> View</a>
-                                }
-                            </td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr><td colspan="8" class="text-center text-muted py-4">No sessions found.</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Class (Lớp hành chính)</label>
+                <input type="text" name="className" class="form-control" placeholder="Class name..." value="@ViewBag.ClassName" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Subject (Môn học)</label>
+                <input type="text" name="subjectName" class="form-control" placeholder="Subject name..." value="@ViewBag.SubjectName" />
+            </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Lecturer (Giảng viên)</label>
+                    <input type="text" name="lecturerName" class="form-control" placeholder="Lecturer name..." value="@ViewBag.LecturerName" />
+                </div>
+            }
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Status (Trạng thái)</label>
+                <select name="status" class="form-select">
+                    <option value="">-- All --</option>
+                    <option value="Pending" selected="@(ViewBag.Status == "Pending")">Pending</option>
+                    <option value="Open" selected="@(ViewBag.Status == "Open")">Open</option>
+                    <option value="Closed" selected="@(ViewBag.Status == "Closed")">Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Date (Ngày học)</label>
+                <input type="date" name="date" class="form-control" value="@ViewBag.Date" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i> Filter</button>
+            </div>
+        </form>
     </div>
 </div>
+@if (!Model.Any())
+{
+    <div class="card border-0 shadow-sm py-5 text-center">
+        <div class="card-body">
+            <div class="text-muted mb-3"><i class="ti ti-calendar-off fs-1"></i></div>
+            <h4 class="text-muted">No attendance sessions found</h4>
+            <p class="text-muted small mb-0">All auto-generated or opened sessions will appear here grouped by date.</p>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var group in groupedSessions)
+    {
+        var dateLabel = group.Key == DateTime.Today 
+            ? "Today" 
+            : (group.Key == DateTime.Today.AddDays(-1) ? "Yesterday" : group.Key.ToString("dddd, dd/MM/yyyy"));
+            
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light py-3 border-0">
+                <h5 class="text-primary fw-bold mb-0">
+                    <i class="ti ti-calendar me-2"></i>@dateLabel
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle card-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Time</th>
+                            <th>Room</th>
+                            <th>Lecturer</th>
+                            <th>Status</th>
+                            <th class="text-end" style="width: 260px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in group)
+                        {
+                            string badgeClass = item.Status switch
+                            {
+                                "Open" => "bg-success text-white",
+                                "Closed" => "bg-secondary text-white",
+                                _ => "bg-warning text-dark"
+                            };
+                            
+                            <tr>
+                                <td><strong class="text-dark">@item.ClassName</strong></td>
+                                <td><span class="text-muted small">@item.SubjectName</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center small text-muted">
+                                        <i class="ti ti-clock me-1 text-primary"></i>
+                                        <span>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border px-2 py-1">@item.Room</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center small text-muted">
+                                        <i class="ti ti-user me-1 text-primary"></i>
+                                        <span>@item.LecturerName</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge @badgeClass px-2 py-1">@item.Status</span></td>
+                                <td>
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        @if (item.Status == "Pending")
+                                        {
+                                            if (item.Id > 0)
+                                            {
+                                                <form asp-action="Open" asp-route-id="@item.Id" method="post" class="m-0 w-100">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="ti ti-player-play me-1"></i> Open Session</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="CreateAndOpen" method="post" class="m-0 w-100">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ClassSubjectId" value="@item.ClassSubjectId" />
+                                                    <input type="hidden" name="ScheduleId" value="@item.ScheduleId" />
+                                                    <input type="hidden" name="SessionDate" value="@item.SessionDate.ToString("yyyy-MM-dd")" />
+                                                    <input type="hidden" name="Title" value="Lớp học @item.SessionDate.ToString("dd/MM/yyyy")" />
+                                                    <input type="hidden" name="StartTime" value="@item.StartTime.ToString(@"hh\:mm\:ss")" />
+                                                    <input type="hidden" name="EndTime" value="@item.EndTime.ToString(@"hh\:mm\:ss")" />
+                                                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="ti ti-bolt me-1"></i> Open Session</button>
+                                                </form>
+                                            }
+                                        }
+                                        @if (item.Status == "Open")
+                                        {
+                                            <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-primary btn-sm flex-fill text-center"><i class="ti ti-clipboard-check me-1"></i> Attend</a>
+                                            <form asp-action="Close" asp-route-id="@item.Id" method="post" class="m-0 flex-fill" onsubmit="return confirm('Close this session? Students without records will be marked Absent.')">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-warning btn-sm w-100"><i class="ti ti-player-stop me-1"></i> Close</button>
+                                            </form>
+                                        }
+                                        @if (item.Status == "Closed")
+                                        {
+                                            <a href="/TakeAttendance?sessionId=@item.Id" class="btn btn-outline-secondary btn-sm w-100 text-center"><i class="ti ti-eye me-1"></i> View Attendance</a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

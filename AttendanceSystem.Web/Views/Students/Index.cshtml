@@ -18,6 +18,21 @@
                 </div>
             </div>
             <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @Html.Raw(TempData["SuccessMessage"])
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @Html.Raw(TempData["ErrorMessage"])
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
                 <table class="table table-striped dt-responsive nowrap w-100" id="datatable-buttons">
                     <thead>
                         <tr>
@@ -36,7 +51,16 @@
                                 <td>@item.StudentCode</td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="~/assets/images/avatar-1.jpg" alt="" class="avatar avatar-md rounded-circle me-2" />
+                                        @if (!string.IsNullOrEmpty(item.AvatarUrl))
+                                        {
+                                            <img src="@item.AvatarUrl" alt="Avatar" class="avatar avatar-md rounded-circle me-2" style="object-fit:cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 fw-bold" style="font-size:14px; width: 40px; height: 40px;">
+                                                @(item.FullName?.Substring(0, 1).ToUpper() ?? "S")
+                                            </div>
+                                        }
                                         <span>@item.FullName</span>
                                     </div>
                                 </td>

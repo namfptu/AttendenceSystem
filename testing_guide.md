@@ -21,15 +21,31 @@ Tài liệu này hướng dẫn các bước kiểm thử (test) chi tiết dự
 
 ### Nhóm Attendance (Tổ chức điểm danh)
 - **Class Students (`/ClassStudents` - Danh sách sinh viên của lớp):**
-  - **Ràng buộc:** Không được Add trùng 1 sinh viên vào cùng 1 lớp hành chính nhiều lần.
+  - **Ràng buộc:** 
+    1. Không được Add trùng 1 sinh viên vào cùng 1 lớp hành chính nhiều lần.
+    2. **Ràng buộc Trùng lịch học sinh (Mới):** Khi Admin gán thủ công hoặc Import Excel sinh viên vào Lớp hành chính, hệ thống tự động kiểm tra chéo lịch học của lớp này với tất cả các lớp sinh viên đó đang học trong học kỳ. Nếu có ca trùng giờ học, hệ thống chặn lại và báo lỗi chi tiết để tránh gán trùng lịch học cho sinh viên.
 - **Schedules (`/Schedules`) - Xếp thời khóa biểu:** 
   - **Nút "Save / Add Schedule":** Khi Admin click tạo hoặc cập nhật thời khóa biểu, hệ thống sẽ trigger các ràng buộc cực kỳ nghiêm ngặt:
     - **Ràng buộc Trùng lịch Giảng viên:** Cùng 1 Giảng viên KHÔNG THỂ bị xếp 2 lớp học có khung giờ đè lên nhau. Sẽ báo lỗi `BadRequest`.
     - **Ràng buộc Trùng lịch Phòng học:** Cùng 1 Phòng học KHÔNG THỂ được xếp cho 2 lớp khác nhau vào cùng 1 thời điểm. Sẽ báo lỗi `BadRequest`.
     - **Ràng buộc Trùng lịch Lớp (Class Overlap):** Cùng 1 Lớp hành chính KHÔNG THỂ bị xếp học 2 môn khác nhau vào cùng một thời điểm. Sẽ báo lỗi `BadRequest`.
+    - **Ràng buộc Trùng lịch Học sinh & Tự động xóa (Mới):** Khi xếp lịch cho lớp học phần, nếu phát hiện có sinh viên trong lớp bị trùng lịch chéo với môn học khác ở lớp hành chính khác, hệ thống sẽ **tự động xóa (Auto-remove)** sinh viên đó khỏi lớp hiện tại để giải quyết xung đột lịch học và tiếp tục lưu lịch.
+  - **Bộ lọc nâng cao (Mới):** Giao diện quản lý lịch học được bổ sung thanh lọc đa tiêu chí (Lọc chéo theo Lớp học phần, Lớp hành chính, Môn học, Giảng viên, Thứ) giúp tìm kiếm lịch học nhanh chóng.
+- **Class Substitutes (`/ClassSubstitutes` - Gán giảng viên dạy thay) (Mới):**
+  - **Ràng buộc khi gán:**
+    1. Giảng viên được gán dạy thay không được trùng với Giảng viên chính của lớp học phần.
+    2. Ngày dạy thay phải nằm trong khoảng thời gian diễn ra học kỳ.
+    3. Không cho phép gán trùng giảng viên dạy thay khác cho cùng một lớp học phần trong cùng một ngày.
+    4. Ngày được gán dạy thay bắt buộc phải có lịch học hoặc phiên học đã thiết lập của môn này.
+    5. Giảng viên dạy thay không bị trùng lịch dạy chính thức của chính mình trong khung giờ đó.
+    6. Giảng viên dạy thay không bị trùng lịch dạy thế khác mà họ đã nhận trong khung giờ đó.
 - **Sessions (`/AttendanceSessions`):** 
   - Admin có quyền xem danh sách toàn bộ các phiên điểm danh và xem chi tiết (Take Attendance) của bất kỳ lớp nào. 
+  - **Hiển thị Tabular Day-Card (Mới):** Danh sách ca học được gom nhóm theo từng ngày và hiển thị dưới dạng Bảng (Table) bên trong các Thẻ ngày (Day-Card). Mỗi hàng hiển thị rõ ràng Mã Lớp, Môn học, Thời gian, Phòng học, Trạng thái và đặc biệt là **Tên Giảng viên (Mới)** phụ trách ca học.
+  - **Ca học ảo (Virtual Sessions - Mới):** Tự động hiển thị các ca học ảo trạng thái `Pending` (ID = 0) tương ứng với các Lịch học của ngày hôm nay nhưng chưa được giảng viên mở. Giúp Admin giám sát được toàn bộ ca dạy của ngày hôm nay.
+  - **Ràng buộc Thời gian mở ca (Mới):** Quy tắc thời gian mở ca học (chỉ cho phép mở từ trước 30 phút giờ bắt đầu đến trước giờ kết thúc ca học) được áp dụng đồng bộ cho **cả Giảng viên và Admin** (Admin không còn đặc quyền bypass giới hạn thời gian mở ca).
   - **Đặc quyền bypass:** Khi Giảng viên đã đóng phiên (Closed), giảng viên bị khóa quyền sửa đổi. Chỉ có Admin mới có quyền truy cập vào màn hình chi tiết điểm danh để cập nhật lại trạng thái điểm danh của sinh viên (Ví dụ: sinh viên khiếu nại điểm danh sai).
+  - **Bộ lọc nâng cao (Mới):** Giao diện danh sách ca học được tích hợp bộ lọc nhanh theo Lớp hành chính, Môn học, Trạng thái, Ngày học, và Giảng viên dạy để quản lý hiệu quả.
 
 ---
 
@@ -39,10 +55,14 @@ Tài liệu này hướng dẫn các bước kiểm thử (test) chi tiết dự
 ### Nhóm Main
 - **Dashboard (`/Dashboard`):** 
   - **Hiển thị:** Các khung giờ học hôm nay (Today's Classes) phải được phân tách rõ ràng. Mỗi khung giờ (Schedule) là 1 thẻ riêng biệt, dù dạy cùng 1 lớp.
-  - **Nút "⚡ Open Session" (Mở phiên nhanh):** Khi Giảng viên click vào nút này, hệ thống chạy 3 thao tác ngầm:
+  - **Nút "⚡ Open Session" (Mở phiên nhanh):** Khi Giảng viên click vào nút này, hệ thống chạy các thao tác ngầm:
     1. Mapping chính xác `ScheduleId` của thẻ học đó để ghi nhận phiên.
     2. **Ràng buộc Thời gian:** Chỉ cho phép mở phiên điểm danh **sớm nhất 30 phút** trước giờ bắt đầu (`StartTime`) và **chậm nhất** là trước giờ kết thúc (`EndTime`). Nếu bấm mở quá sớm hoặc quá muộn, hệ thống chặn và hiện lỗi.
     3. Tự động chuyển hướng (Redirect) Giảng viên thẳng vào màn hình `Take Attendance` (Điểm danh sinh viên).
+    4. **Hỗ trợ ca Pending sẵn có (Mới):** Hiển thị nút bấm để mở nhanh các ca học đã có trong cơ sở dữ liệu ở trạng thái `Pending` thay vì chỉ hiện Badge chữ tĩnh.
+  - **Dạy thay (Class Substitute - Mới):** 
+    - Nếu giảng viên được Admin phân công dạy thế vào ngày hôm nay, lớp dạy thế phải xuất hiện chính xác trên Dashboard của họ. 
+    - Giảng viên dạy thế có toàn quyền mở ca học và điểm danh như giảng viên chính thức trong ngày được phân công. Quyền này sẽ tự động hết hạn khi qua ngày.
 - **Tạo Phiên Điểm Danh Thủ Công (Học bù):**
   - **Ràng buộc:** 
     - `StartTime` phải nhỏ hơn `EndTime`.

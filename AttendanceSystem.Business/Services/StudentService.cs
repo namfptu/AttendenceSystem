@@ -30,7 +30,8 @@ namespace AttendanceSystem.Business.Services
                     Faculty = s.Faculty,
                     Major = s.Major,
                     FullName = s.User.FullName,
-                    Email = s.User.Email
+                    Email = s.User.Email,
+                    AvatarUrl = s.User.AvatarUrl
                 })
                 .ToListAsync();
         }
@@ -50,7 +51,8 @@ namespace AttendanceSystem.Business.Services
                 Faculty = student.Faculty,
                 Major = student.Major,
                 FullName = student.User.FullName,
-                Email = student.User.Email
+                Email = student.User.Email,
+                AvatarUrl = student.User.AvatarUrl
             };
         }
 
@@ -102,6 +104,7 @@ namespace AttendanceSystem.Business.Services
             student.User.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            dto.AvatarUrl = student.User.AvatarUrl;
             return dto;
         }
 

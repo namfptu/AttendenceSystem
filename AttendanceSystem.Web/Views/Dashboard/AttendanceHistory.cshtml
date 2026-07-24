@@ -1,0 +1,106 @@
+@model IEnumerable<AttendanceSystem.Business.DTOs.AttendanceRecordDto>
+@{
+    var classSubject = ViewBag.ClassSubject as AttendanceSystem.Business.DTOs.ClassSubjectDto;
+    ViewData["Title"] = "Attendance History";
+}
+
+<div class="row">
+    <div class="col-12 col-lg-10 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center bg-white border-bottom py-3">
+                <div>
+                    <h4 class="card-title mb-1"><i class="ti ti-history me-2 text-primary"></i>Attendance History</h4>
+                    <p class="text-muted small mb-0">
+                        @if (classSubject != null)
+                        {
+                            <strong>@classSubject.SubjectCode - @classSubject.SubjectName</strong><span> | Class: @classSubject.ClassCode</span>
+                        }
+                    </p>
+                </div>
+                <a href="/Dashboard/Student" class="btn btn-outline-secondary btn-sm">
+                    <i class="ti ti-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">#</th>
+                                <th>Session Date</th>
+                                <th>Session Title</th>
+                                <th>Check-in Time</th>
+                                <th class="text-center" style="width: 150px;">Status</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                int idx = 1;
+                                foreach (var record in Model)
+                                {
+                                    string badgeClass = record.Status switch
+                                    {
+                                        "Present" => "bg-success",
+                                        "Absent" => "bg-danger",
+                                        "Late" => "bg-warning text-dark",
+                                        "Excused" => "bg-info",
+                                        _ => "bg-secondary"
+                                    };
+
+                                    <tr>
+                                        <td>@(idx++)</td>
+                                        <td>
+                                            @if (record.SessionDate.HasValue)
+                                            {
+                                                <strong>@record.SessionDate.Value.ToString("dd/MM/yyyy")</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>@(record.SessionTitle ?? "Regular Session")</td>
+                                        <td>
+                                            @if (record.CheckInTime.HasValue)
+                                            {
+                                                <span>@record.CheckInTime.Value.AddHours(7).ToString("HH:mm:ss")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge @badgeClass fs-7 px-3 py-2">@record.Status</span>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(record.Note))
+                                            {
+                                                <span class="text-muted small">@record.Note</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        <i class="ti ti-info-circle mb-2" style="font-size: 32px;"></i>
+                                        <p class="mb-0">No attendance records found for this class.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

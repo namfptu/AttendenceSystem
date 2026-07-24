@@ -117,6 +117,55 @@ namespace AttendanceSystem.Business.Services
                                 && s.ClassSubject.ClassId == classSubject.ClassId 
                                 && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
                 if (classOverlap) throw new Exception("Lớp học đã có môn học khác bị trùng giờ trong ngày này.");
+
+                var studentIds = await _context.ClassStudents
+                    .Where(cs => cs.ClassId == classSubject.ClassId && cs.Status == Data.Entities.Enums.ClassStudentStatus.Active)
+                    .Select(cs => cs.StudentId)
+                    .ToListAsync();
+
+                if (studentIds.Any())
+                {
+                    var overlappingStudentIds = await _context.ClassStudents
+                        .Include(cs => cs.Class).ThenInclude(c => c.ClassSubjects)
+                            .ThenInclude(csb => csb.Schedules)
+                        .Where(cs => cs.Status == Data.Entities.Enums.ClassStudentStatus.Active 
+                                  && studentIds.Contains(cs.StudentId)
+                                  && cs.ClassId != classSubject.ClassId)
+                        .SelectMany(cs => cs.Class.ClassSubjects
+                            .Where(csb => csb.SemesterId == classSubject.SemesterId && csb.Status == Data.Entities.Enums.ClassSubjectStatus.Active)
+                            .SelectMany(csb => csb.Schedules.Where(s => !s.IsDeleted && s.DayOfWeek == dto.DayOfWeek && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime),
+                                        (csb, s) => cs.StudentId))
+                        .Distinct()
+                        .ToListAsync();
+
+                    if (overlappingStudentIds.Any())
+                    {
+                        var enrollmentsToRemove = await _context.ClassStudents
+                            .Where(cs => cs.ClassId == classSubject.ClassId && overlappingStudentIds.Contains(cs.StudentId))
+                            .ToListAsync();
+
+                        if (enrollmentsToRemove.Any())
+                        {
+                            _context.ClassStudents.RemoveRange(enrollmentsToRemove);
+                            
+                            var sessionIds = await _context.AttendanceSessions
+                                .Where(asess => asess.ClassSubjectId == dto.ClassSubjectId)
+                                .Select(asess => asess.Id)
+                                .ToListAsync();
+                            
+                            if (sessionIds.Any())
+                            {
+                                var recordsToRemove = await _context.AttendanceRecords
+                                    .Where(ar => sessionIds.Contains(ar.AttendanceSessionId) && overlappingStudentIds.Contains(ar.StudentId))
+                                    .ToListAsync();
+                                if (recordsToRemove.Any())
+                                {
+                                    _context.AttendanceRecords.RemoveRange(recordsToRemove);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             var schedule = new Schedule
@@ -160,6 +209,55 @@ namespace AttendanceSystem.Business.Services
                                 && s.ClassSubject.ClassId == classSubject.ClassId 
                                 && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime);
                 if (classOverlap) throw new Exception("Lớp học đã có môn học khác bị trùng giờ trong ngày này.");
+
+                var studentIds = await _context.ClassStudents
+                    .Where(cs => cs.ClassId == classSubject.ClassId && cs.Status == Data.Entities.Enums.ClassStudentStatus.Active)
+                    .Select(cs => cs.StudentId)
+                    .ToListAsync();
+
+                if (studentIds.Any())
+                {
+                    var overlappingStudentIds = await _context.ClassStudents
+                        .Include(cs => cs.Class).ThenInclude(c => c.ClassSubjects)
+                            .ThenInclude(csb => csb.Schedules)
+                        .Where(cs => cs.Status == Data.Entities.Enums.ClassStudentStatus.Active 
+                                  && studentIds.Contains(cs.StudentId)
+                                  && cs.ClassId != classSubject.ClassId)
+                        .SelectMany(cs => cs.Class.ClassSubjects
+                            .Where(csb => csb.SemesterId == classSubject.SemesterId && csb.Status == Data.Entities.Enums.ClassSubjectStatus.Active)
+                            .SelectMany(csb => csb.Schedules.Where(s => s.Id != id && !s.IsDeleted && s.DayOfWeek == dto.DayOfWeek && s.StartTime < dto.EndTime && s.EndTime > dto.StartTime),
+                                        (csb, s) => cs.StudentId))
+                        .Distinct()
+                        .ToListAsync();
+
+                    if (overlappingStudentIds.Any())
+                    {
+                        var enrollmentsToRemove = await _context.ClassStudents
+                            .Where(cs => cs.ClassId == classSubject.ClassId && overlappingStudentIds.Contains(cs.StudentId))
+                            .ToListAsync();
+
+                        if (enrollmentsToRemove.Any())
+                        {
+                            _context.ClassStudents.RemoveRange(enrollmentsToRemove);
+                            
+                            var sessionIds = await _context.AttendanceSessions
+                                .Where(asess => asess.ClassSubjectId == dto.ClassSubjectId)
+                                .Select(asess => asess.Id)
+                                .ToListAsync();
+                            
+                            if (sessionIds.Any())
+                            {
+                                var recordsToRemove = await _context.AttendanceRecords
+                                    .Where(ar => sessionIds.Contains(ar.AttendanceSessionId) && overlappingStudentIds.Contains(ar.StudentId))
+                                    .ToListAsync();
+                                if (recordsToRemove.Any())
+                                {
+                                    _context.AttendanceRecords.RemoveRange(recordsToRemove);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             schedule.ClassSubjectId = dto.ClassSubjectId;
@@ -178,6 +276,15 @@ namespace AttendanceSystem.Business.Services
             if (schedule == null) return false;
 
             schedule.IsDeleted = true;
+
+            var sessions = await _context.AttendanceSessions
+                .Where(s => s.ScheduleId == id && !s.IsDeleted)
+                .ToListAsync();
+            foreach (var session in sessions)
+            {
+                session.IsDeleted = true;
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }

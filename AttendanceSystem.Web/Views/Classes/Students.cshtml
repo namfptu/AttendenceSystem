@@ -1,8 +1,11 @@
 @model IEnumerable<AttendanceSystem.Business.DTOs.ClassStudentDto>
+@using System.Linq
 @{
     var classObj = ViewBag.Class as AttendanceSystem.Business.DTOs.ClassDto;
     ViewData["Title"] = $"Students in Class {classObj?.ClassCode}";
-    var allStudents = ViewBag.AllStudents as IEnumerable<AttendanceSystem.Business.DTOs.StudentDto>;
+    var allStudents = ViewBag.AllStudents as IEnumerable<AttendanceSystem.Business.DTOs.StudentDto> ?? new List<AttendanceSystem.Business.DTOs.StudentDto>();
+    var enrolledIds = Model?.Select(m => m.StudentId).ToHashSet() ?? new HashSet<int>();
+    var availableStudents = allStudents.Where(s => !enrolledIds.Contains(s.Id)).ToList();
 }
 
 <div class="row">
@@ -24,27 +27,45 @@
 
                 <div class="mb-4 p-3 bg-light border rounded">
                     <div class="row">
-                        <!-- Add Single Student -->
+                        <!-- Add Students Checklist -->
                         <div class="col-md-6 border-end">
-                            <h5 class="fs-6 mb-3">Add Single Student</h5>
-                            <form asp-action="AddStudent" method="post" class="row align-items-end">
+                            <h5 class="fs-6 mb-3">Add Students</h5>
+                            <form asp-action="AddStudent" method="post">
                                 <input type="hidden" name="classId" value="@classObj?.Id" />
                                 
-                                <div class="col-sm-8 mb-2 mb-sm-0">
-                                    <select name="studentId" class="form-select" required>
-                                        <option value="">-- Select a Student --</option>
-                                        @if (allStudents != null)
+                                <div class="mb-2">
+                                    <input type="text" id="studentSearchInput" class="form-control" placeholder="Search student by name or code..." />
+                                </div>
+                                
+                                <div class="border rounded p-2 mb-3 bg-white" style="max-height: 200px; overflow-y: auto;">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="selectAllStudents">
+                                        <label class="form-check-label fw-bold" for="selectAllStudents">
+                                            Select All Visible
+                                        </label>
+                                    </div>
+                                    <hr class="my-1">
+                                    <div id="studentListContainer">
+                                        @if (availableStudents.Any())
                                         {
-                                            foreach (var student in allStudents)
+                                            foreach (var student in availableStudents)
                                             {
-                                                <option value="@student.Id">@student.StudentCode - @student.FullName</option>
+                                                <div class="form-check student-checkbox-item" data-search-text="@student.StudentCode.ToLower() @student.FullName.ToLower()">
+                                                    <input class="form-check-input student-checkbox" type="checkbox" name="studentIds" value="@student.Id" id="student_@student.Id">
+                                                    <label class="form-check-label" for="student_@student.Id">
+                                                        <span class="badge bg-secondary me-1">@student.StudentCode</span> @student.FullName
+                                                    </label>
+                                                </div>
                                             }
                                         }
-                                    </select>
+                                        else
+                                        {
+                                            <div class="text-muted text-center py-2">No more students available to add.</div>
+                                        }
+                                    </div>
                                 </div>
-                                <div class="col-sm-4">
-                                    <button type="submit" class="btn btn-primary w-100">Add Student</button>
-                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100">Add Selected Students</button>
                             </form>
                         </div>
 
@@ -66,7 +87,7 @@
                     </div>
                 </div>
 
-                <table class="table table-striped dt-responsive nowrap w-100">
+                <table class="table table-striped dt-responsive nowrap w-100 js-paginate">
                     <thead>
                         <tr>
                             <th>Student Code</th>
@@ -112,3 +133,41 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById('studentSearchInput');
+        const selectAllCheckbox = document.getElementById('selectAllStudents');
+        const studentItems = document.querySelectorAll('.student-checkbox-item');
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function (e) {
+                const searchText = e.target.value.toLowerCase().trim();
+                studentItems.forEach(function (item) {
+                    const text = item.getAttribute('data-search-text');
+                    if (text.includes(searchText)) {
+                        item.style.setProperty('display', 'block', 'important');
+                    } else {
+                        item.style.setProperty('display', 'none', 'important');
+                        // Deselect if hidden
+                        const cb = item.querySelector('.student-checkbox');
+                        if (cb) cb.checked = false;
+                    }
+                });
+            });
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function (e) {
+                const isChecked = e.target.checked;
+                checkboxes.forEach(function (cb) {
+                    const parent = cb.closest('.student-checkbox-item');
+                    if (parent && parent.style.display !== 'none') {
+                        cb.checked = isChecked;
+                    }
+                });
+            });
+        }
+    });
+</script>

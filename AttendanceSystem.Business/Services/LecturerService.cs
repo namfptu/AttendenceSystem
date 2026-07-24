@@ -29,7 +29,8 @@ namespace AttendanceSystem.Business.Services
                     LecturerCode = l.LecturerCode,
                     Department = l.Department,
                     FullName = l.User.FullName,
-                    Email = l.User.Email
+                    Email = l.User.Email,
+                    AvatarUrl = l.User.AvatarUrl
                 })
                 .ToListAsync();
         }
@@ -48,7 +49,8 @@ namespace AttendanceSystem.Business.Services
                 LecturerCode = lecturer.LecturerCode,
                 Department = lecturer.Department,
                 FullName = lecturer.User.FullName,
-                Email = lecturer.User.Email
+                Email = lecturer.User.Email,
+                AvatarUrl = lecturer.User.AvatarUrl
             };
         }
 
@@ -98,6 +100,7 @@ namespace AttendanceSystem.Business.Services
             lecturer.User.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            dto.AvatarUrl = lecturer.User.AvatarUrl;
             return dto;
         }
 

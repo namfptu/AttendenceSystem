@@ -18,5 +18,8 @@ namespace AttendanceSystem.Business.DTOs
         public string? StudentCode { get; set; }
         public string? StudentName { get; set; }
         public string? AvatarUrl { get; set; }
+        public DateTime? SessionDate { get; set; }
+        public string? SessionTitle { get; set; }
+        public double AttendanceRate { get; set; } = 100.0;
     }
 }

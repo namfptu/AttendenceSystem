@@ -37,10 +37,25 @@
                         @if (cls.SessionId.HasValue)
                         {
                             <span class="badge @statusBadge me-2">@cls.SessionStatus</span>
-                            @if (cls.SessionStatus == "Open")
+                            @if (cls.SessionStatus == "Pending")
+                            {
+                                <form asp-controller="AttendanceSessions" asp-action="Open" asp-route-id="@cls.SessionId" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="ti ti-player-play me-1"></i>Open Session
+                                    </button>
+                                </form>
+                            }
+                            else if (cls.SessionStatus == "Open")
                             {
                                 <a href="/TakeAttendance?sessionId=@cls.SessionId" class="btn btn-sm btn-primary">
                                     <i class="ti ti-clipboard-check me-1"></i>Take Attendance
+                                </a>
+                            }
+                            else if (cls.SessionStatus == "Closed")
+                            {
+                                <a href="/TakeAttendance?sessionId=@cls.SessionId" class="btn btn-sm btn-outline-secondary">
+                                    <i class="ti ti-eye me-1"></i>View
                                 </a>
                             }
                         }
@@ -87,20 +102,17 @@ else
                         <th>Subject</th>
                         <th>Students</th>
                         <th>Sessions</th>
-                        <th>Avg Attendance</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var cs in Model.ClassSummaries)
                     {
-                        string rateColor = cs.AvgAttendanceRate >= 80 ? "text-success" : (cs.AvgAttendanceRate >= 60 ? "text-warning" : "text-danger");
                         <tr>
                             <td><strong>@cs.ClassName</strong></td>
                             <td>@cs.SubjectName</td>
                             <td>@cs.TotalStudents</td>
                             <td>@cs.TotalSessions</td>
-                            <td><span class="@rateColor fw-bold">@cs.AvgAttendanceRate%</span></td>
                             <td>
                                 <a href="/Export/Attendance?classSubjectId=@cs.ClassSubjectId" class="btn btn-sm btn-outline-success"><i class="ti ti-download me-1"></i>Export</a>
                             </td>

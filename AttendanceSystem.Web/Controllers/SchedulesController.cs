@@ -15,7 +15,7 @@ namespace AttendanceSystem.Web.Controllers
         private readonly IApiClient _apiClient;
         public SchedulesController(IApiClient apiClient) { _apiClient = apiClient; }
 
-        public async Task<IActionResult> Index(int? classSubjectId)
+        public async Task<IActionResult> Index(int? classSubjectId, string? className, string? subjectName, string? lecturerName, string? dayOfWeek)
         {
             IEnumerable<ScheduleDto> schedules;
             if (classSubjectId.HasValue)
@@ -23,9 +23,36 @@ namespace AttendanceSystem.Web.Controllers
             else
                 schedules = await _apiClient.GetAsync<IEnumerable<ScheduleDto>>("Schedules") ?? new List<ScheduleDto>();
 
+            // Apply filters
+            if (!string.IsNullOrEmpty(className))
+            {
+                schedules = schedules.Where(s => s.ClassName != null && s.ClassName.Contains(className, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(subjectName))
+            {
+                schedules = schedules.Where(s => s.SubjectName != null && s.SubjectName.Contains(subjectName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(lecturerName))
+            {
+                schedules = schedules.Where(s => s.LecturerName != null && s.LecturerName.Contains(lecturerName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(dayOfWeek))
+            {
+                if (Enum.TryParse<DayOfWeek>(dayOfWeek, true, out var dow))
+                {
+                    schedules = schedules.Where(s => s.DayOfWeek == dow);
+                }
+            }
+
             var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
             ViewBag.ClassSubjects = classSubjects;
             ViewBag.SelectedClassSubjectId = classSubjectId;
+            
+            ViewBag.ClassName = className;
+            ViewBag.SubjectName = subjectName;
+            ViewBag.LecturerName = lecturerName;
+            ViewBag.DayOfWeek = dayOfWeek;
+
             return View(schedules);
         }
 
@@ -42,9 +69,14 @@ namespace AttendanceSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var created = await _apiClient.PostAsync<ScheduleDto, ScheduleDto>("Schedules", model);
-                if (created != null) return RedirectToAction(nameof(Index));
-                ModelState.AddModelError("", "Failed to create schedule.");
+                var response = await _apiClient.PostRawAsync("Schedules", model);
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Schedule created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", string.IsNullOrEmpty(errorMsg) ? "Failed to create schedule." : errorMsg);
             }
             var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
             ViewBag.ClassSubjects = classSubjects;
@@ -66,9 +98,14 @@ namespace AttendanceSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var success = await _apiClient.PutAsync($"Schedules/{id}", model);
-                if (success) return RedirectToAction(nameof(Index));
-                ModelState.AddModelError("", "Failed to update schedule.");
+                var response = await _apiClient.PutRawAsync($"Schedules/{id}", model);
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Schedule updated successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError("", string.IsNullOrEmpty(errorMsg) ? "Failed to update schedule." : errorMsg);
             }
             var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
             ViewBag.ClassSubjects = classSubjects;
@@ -79,7 +116,11 @@ namespace AttendanceSystem.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _apiClient.DeleteAsync($"Schedules/{id}");
+            var success = await _apiClient.DeleteAsync($"Schedules/{id}");
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Schedule deleted successfully!";
+            }
             return RedirectToAction(nameof(Index));
         }
     }

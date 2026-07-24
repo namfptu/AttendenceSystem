@@ -35,16 +35,35 @@ namespace AttendanceSystem.Business.Services
                 .Where(ar => ar.AttendanceSessionId == sessionId && !ar.IsDeleted)
                 .ToListAsync();
 
+            // Fetch closed sessions for this ClassSubject to calculate historical attendance rates
+            var closedSessionIds = await _context.AttendanceSessions
+                .Where(s => s.ClassSubjectId == session.ClassSubjectId && s.Status == SessionStatus.Closed && !s.IsDeleted)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            var historyRecords = await _context.AttendanceRecords
+                .Where(r => closedSessionIds.Contains(r.AttendanceSessionId) && !r.IsDeleted)
+                .ToListAsync();
+
             var result = new List<AttendanceRecordDto>();
             foreach (var cs in classStudents)
             {
                 var existing = existingRecords.FirstOrDefault(r => r.StudentId == cs.StudentId);
+                
+                var studentHistory = historyRecords.Where(r => r.StudentId == cs.StudentId).ToList();
+                int totalClosed = closedSessionIds.Count;
+                int presentCount = studentHistory.Count(r => r.Status == AttendanceStatus.Present);
+                
+                double attendanceRate = totalClosed > 0 
+                    ? Math.Round((double)presentCount / totalClosed * 100, 1) 
+                    : 100.0;
+
                 result.Add(new AttendanceRecordDto
                 {
                     Id = existing?.Id ?? 0,
                     AttendanceSessionId = sessionId,
                     StudentId = cs.StudentId,
-                    Status = existing?.Status.ToString() ?? AttendanceStatus.Present.ToString(),
+                    Status = existing?.Status == AttendanceStatus.Present ? "Present" : "Absent",
                     CheckInTime = existing?.CheckInTime,
                     IsManualEdited = existing?.IsManualEdited ?? false,
                     EditedByLecturerId = existing?.EditedByLecturerId,
@@ -52,7 +71,8 @@ namespace AttendanceSystem.Business.Services
                     Note = existing?.Note,
                     StudentCode = cs.Student.StudentCode,
                     StudentName = cs.Student.User.FullName,
-                    AvatarUrl = cs.Student.User.AvatarUrl
+                    AvatarUrl = cs.Student.User.AvatarUrl,
+                    AttendanceRate = attendanceRate
                 });
             }
             return result.OrderBy(r => r.StudentCode).ToList();
@@ -148,9 +168,10 @@ namespace AttendanceSystem.Business.Services
                 .Select(ar => new AttendanceRecordDto
                 {
                     Id = ar.Id, AttendanceSessionId = ar.AttendanceSessionId, StudentId = ar.StudentId,
-                    Status = ar.Status.ToString(), CheckInTime = ar.CheckInTime, IsManualEdited = ar.IsManualEdited,
+                    Status = ar.Status == AttendanceStatus.Present ? "Present" : "Absent", CheckInTime = ar.CheckInTime, IsManualEdited = ar.IsManualEdited,
                     EditedByLecturerId = ar.EditedByLecturerId, EditedAt = ar.EditedAt, Note = ar.Note,
-                    StudentCode = ar.Student.StudentCode, StudentName = ar.Student.User.FullName, AvatarUrl = ar.Student.User.AvatarUrl
+                    StudentCode = ar.Student.StudentCode, StudentName = ar.Student.User.FullName, AvatarUrl = ar.Student.User.AvatarUrl,
+                    SessionDate = ar.AttendanceSession.SessionDate, SessionTitle = ar.AttendanceSession.Title
                 }).ToListAsync();
         }
     }

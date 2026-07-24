@@ -16,7 +16,7 @@ namespace AttendanceSystem.Web.Controllers
         private readonly IApiClient _apiClient;
         public AttendanceSessionsController(IApiClient apiClient) { _apiClient = apiClient; }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? className, string? subjectName, string? lecturerName, string? status, DateTime? date)
         {
             IEnumerable<AttendanceSessionDto> sessions;
             if (User.IsInRole("Admin"))
@@ -30,38 +30,39 @@ namespace AttendanceSystem.Web.Controllers
                 if (string.IsNullOrEmpty(lecturerIdStr)) return Forbid();
                 sessions = await _apiClient.GetAsync<IEnumerable<AttendanceSessionDto>>($"AttendanceSessions/Lecturer/{lecturerIdStr}") ?? new List<AttendanceSessionDto>();
             }
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(className))
+            {
+                sessions = sessions.Where(s => s.ClassName != null && s.ClassName.Contains(className, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(subjectName))
+            {
+                sessions = sessions.Where(s => s.SubjectName != null && s.SubjectName.Contains(subjectName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(lecturerName))
+            {
+                sessions = sessions.Where(s => s.LecturerName != null && s.LecturerName.Contains(lecturerName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                sessions = sessions.Where(s => s.Status != null && s.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+            }
+            if (date.HasValue)
+            {
+                sessions = sessions.Where(s => s.SessionDate.Date == date.Value.Date);
+            }
+
+            ViewBag.ClassName = className;
+            ViewBag.SubjectName = subjectName;
+            ViewBag.LecturerName = lecturerName;
+            ViewBag.Status = status;
+            ViewBag.Date = date?.ToString("yyyy-MM-dd");
+
             return View(sessions);
         }
 
-        public async Task<IActionResult> Create()
-        {
-            var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
-            ViewBag.ClassSubjects = classSubjects;
-            return View(new AttendanceSessionDto { SessionDate = DateTime.Now, LateAfterMinutes = 15 });
-        }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AttendanceSessionDto model)
-        {
-            if (ModelState.IsValid)
-            {
-                var lecturerIdStr = User.FindFirstValue("LecturerId");
-                if (!string.IsNullOrEmpty(lecturerIdStr))
-                    model.CreatedByLecturerId = int.Parse(lecturerIdStr);
-
-                var res = await _apiClient.PostRawAsync("AttendanceSessions", model);
-                if (res.IsSuccessStatusCode)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-                var err = await res.Content.ReadAsStringAsync();
-                ModelState.AddModelError("", string.IsNullOrEmpty(err) ? "Failed to create session." : err);
-            }
-            var classSubjects = await _apiClient.GetAsync<IEnumerable<ClassSubjectDto>>("ClassSubjects") ?? new List<ClassSubjectDto>();
-            ViewBag.ClassSubjects = classSubjects;
-            return View(model);
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -77,8 +78,7 @@ namespace AttendanceSystem.Web.Controllers
             
             if (created != null && created.Id > 0)
             {
-                bool isAdmin = User.IsInRole("Admin");
-                var res = await _apiClient.PutRawAsync($"AttendanceSessions/{created.Id}/Open?isAdmin={isAdmin}", new { });
+                var res = await _apiClient.PutRawAsync($"AttendanceSessions/{created.Id}/Open", new { });
                 if (res.IsSuccessStatusCode)
                 {
                     // Redirect thẳng tới màn hình Take Attendance
@@ -101,8 +101,7 @@ namespace AttendanceSystem.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Open(int id)
         {
-            bool isAdmin = User.IsInRole("Admin");
-            var res = await _apiClient.PutRawAsync($"AttendanceSessions/{id}/Open?isAdmin={isAdmin}", new { });
+            var res = await _apiClient.PutRawAsync($"AttendanceSessions/{id}/Open", new { });
             if (!res.IsSuccessStatusCode)
             {
                 var err = await res.Content.ReadAsStringAsync();

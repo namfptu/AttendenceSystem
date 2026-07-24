@@ -64,8 +64,18 @@ namespace AttendanceSystem.Business.Services
             var lecturer = await _context.Lecturers.Include(l => l.User).FirstOrDefaultAsync(l => l.Id == lecturerId && !l.IsDeleted);
             if (lecturer == null) return null;
 
-            var today = DateTime.UtcNow.Date;
-            var todayDow = DateTime.UtcNow.DayOfWeek;
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            var today = localTime.Date;
+            var todayDow = localTime.DayOfWeek;
 
             // Today classes from schedules
             var schedules = await _context.Schedules
@@ -125,7 +135,17 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<AdminDashboardDto> GetAdminDashboardAsync()
         {
-            var today = DateTime.UtcNow.Date;
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            var today = localTime.Date;
             return new AdminDashboardDto
             {
                 TotalStudents = await _context.Students.CountAsync(s => !s.IsDeleted),

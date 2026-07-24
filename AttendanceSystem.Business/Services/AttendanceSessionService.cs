@@ -21,26 +21,146 @@ namespace AttendanceSystem.Business.Services
 
         public async Task<IEnumerable<AttendanceSessionDto>> GetAllAsync()
         {
-            return await QuerySessions()
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            var today = localTime.Date;
+            var todayDow = localTime.DayOfWeek;
+
+            var dbSessions = await QuerySessions()
                 .OrderByDescending(s => s.SessionDate)
                 .ThenByDescending(s => s.StartTime)
                 .Select(s => MapToDto(s))
                 .ToListAsync();
+
+            var todaySchedules = await _context.Schedules
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Class)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Subject)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Lecturer).ThenInclude(l => l.User)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Semester)
+                .Where(s => s.DayOfWeek == todayDow && !s.IsDeleted && s.ClassSubject.Status == ClassSubjectStatus.Active)
+                .ToListAsync();
+
+            var result = new List<AttendanceSessionDto>(dbSessions);
+
+            foreach (var sch in todaySchedules)
+            {
+                bool exists = dbSessions.Any(s => s.ClassSubjectId == sch.ClassSubjectId 
+                                               && s.SessionDate.Date == today 
+                                               && (s.ScheduleId == sch.Id || (s.ScheduleId == null && s.StartTime == sch.StartTime)));
+                if (!exists)
+                {
+                    result.Add(new AttendanceSessionDto
+                    {
+                        Id = 0,
+                        ClassSubjectId = sch.ClassSubjectId,
+                        ScheduleId = sch.Id,
+                        SessionDate = today,
+                        Title = $"Lớp học {today:dd/MM/yyyy}",
+                        StartTime = sch.StartTime,
+                        EndTime = sch.EndTime,
+                        LateAfterMinutes = 15,
+                        Status = SessionStatus.Pending.ToString(),
+                        ClassName = sch.ClassSubject.Class.ClassName,
+                        SubjectName = sch.ClassSubject.Subject.SubjectName,
+                        LecturerName = sch.ClassSubject.Lecturer.User.FullName,
+                        Room = sch.Room,
+                        SemesterName = sch.ClassSubject.Semester.Name,
+                        TotalStudents = 0,
+                        PresentCount = 0,
+                        AbsentCount = 0
+                    });
+                }
+            }
+
+            return result.OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.StartTime);
         }
 
         public async Task<IEnumerable<AttendanceSessionDto>> GetByLecturerIdAsync(int lecturerId)
         {
-            return await QuerySessions()
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            var today = localTime.Date;
+            var todayDow = localTime.DayOfWeek;
+
+            var dbSessions = await QuerySessions()
                 .Where(s => s.ClassSubject.LecturerId == lecturerId)
                 .OrderByDescending(s => s.SessionDate)
                 .ThenByDescending(s => s.StartTime)
                 .Select(s => MapToDto(s))
                 .ToListAsync();
+
+            var todaySchedules = await _context.Schedules
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Class)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Subject)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Lecturer).ThenInclude(l => l.User)
+                .Include(s => s.ClassSubject).ThenInclude(cs => cs.Semester)
+                .Where(s => s.ClassSubject.LecturerId == lecturerId && s.DayOfWeek == todayDow && !s.IsDeleted && s.ClassSubject.Status == ClassSubjectStatus.Active)
+                .ToListAsync();
+
+            var result = new List<AttendanceSessionDto>(dbSessions);
+
+            foreach (var sch in todaySchedules)
+            {
+                bool exists = dbSessions.Any(s => s.ClassSubjectId == sch.ClassSubjectId 
+                                               && s.SessionDate.Date == today 
+                                               && (s.ScheduleId == sch.Id || (s.ScheduleId == null && s.StartTime == sch.StartTime)));
+                if (!exists)
+                {
+                    result.Add(new AttendanceSessionDto
+                    {
+                        Id = 0,
+                        ClassSubjectId = sch.ClassSubjectId,
+                        ScheduleId = sch.Id,
+                        SessionDate = today,
+                        Title = $"Lớp học {today:dd/MM/yyyy}",
+                        StartTime = sch.StartTime,
+                        EndTime = sch.EndTime,
+                        LateAfterMinutes = 15,
+                        Status = SessionStatus.Pending.ToString(),
+                        ClassName = sch.ClassSubject.Class.ClassName,
+                        SubjectName = sch.ClassSubject.Subject.SubjectName,
+                        LecturerName = sch.ClassSubject.Lecturer.User.FullName,
+                        Room = sch.Room,
+                        SemesterName = sch.ClassSubject.Semester.Name,
+                        TotalStudents = 0,
+                        PresentCount = 0,
+                        AbsentCount = 0
+                    });
+                }
+            }
+
+            return result.OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.StartTime);
         }
 
         public async Task<IEnumerable<AttendanceSessionDto>> GetTodaySessionsByLecturerAsync(int lecturerId)
         {
-            var today = DateTime.UtcNow.Date;
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            var today = localTime.Date;
             return await QuerySessions()
                 .Where(s => s.ClassSubject.LecturerId == lecturerId && s.SessionDate.Date == today)
                 .OrderBy(s => s.StartTime)
