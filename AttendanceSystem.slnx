@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AttendanceSystem.API/AttendanceSystem.API.csproj" />
+  <Project Path="AttendanceSystem.Business/AttendanceSystem.Business.csproj" />
+  <Project Path="AttendanceSystem.Data/AttendanceSystem.Data.csproj" />
+  <Project Path="AttendanceSystem.Web/AttendanceSystem.Web.csproj" />
+</Solution>
