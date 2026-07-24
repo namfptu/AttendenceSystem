@@ -8,5 +8,6 @@ namespace AttendanceSystem.Business.DTOs
         public string Major { get; set; } = null!;
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string? AvatarUrl { get; set; }
     }
 }

@@ -46,16 +46,26 @@ namespace AttendanceSystem.API.Controllers
         }
 
         [HttpPut("{id}/Open")]
-        public async Task<IActionResult> Open(int id, [FromQuery] bool isAdmin = false)
+        public async Task<IActionResult> Open(int id)
         {
             var session = await _service.GetByIdAsync(id);
             if (session == null) return NotFound();
             
-            var now = System.DateTime.Now;
+            TimeZoneInfo vietnamZone;
+            try
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            }
+            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            
             var start = session.SessionDate.Date.Add(session.StartTime);
             var end = session.SessionDate.Date.Add(session.EndTime);
             
-            if (!isAdmin && (now < start.AddMinutes(-30) || now > end)) 
+            if (now < start.AddMinutes(-30) || now > end) 
             {
                 return BadRequest($"Hệ thống chỉ cho phép mở phiên điểm danh trong khoảng {start.AddMinutes(-30):HH:mm} đến {end:HH:mm}.");
             }

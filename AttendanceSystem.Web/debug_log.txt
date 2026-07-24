@@ -1,0 +1,72 @@
+--- Submit Called at 7/13/2026 4:21:41 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: 
+ - StudentId: 2, Status: Absent, Note: 
+ - StudentId: 3, Status: Late, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/13/2026 4:21:56 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: ok
+ - StudentId: 2, Status: Present, Note: 
+ - StudentId: 3, Status: Late, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/13/2026 4:24:46 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: ok
+ - StudentId: 2, Status: Absent, Note: 
+ - StudentId: 3, Status: Absent, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/13/2026 4:25:41 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: ok
+ - StudentId: 2, Status: Absent, Note: 
+ - StudentId: 3, Status: Absent, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/13/2026 4:25:42 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: ok
+ - StudentId: 2, Status: Absent, Note: 
+ - StudentId: 3, Status: Absent, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/13/2026 4:25:42 PM ---
+SessionId: 4
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: ok
+ - StudentId: 2, Status: Absent, Note: 
+ - StudentId: 3, Status: Absent, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/18/2026 10:58:49 AM ---
+SessionId: 5
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: 
+ - StudentId: 2, Status: Present, Note: 
+ - StudentId: 3, Status: Present, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/23/2026 10:53:29 AM ---
+SessionId: 8
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: 
+ - StudentId: 2, Status: Present, Note: 
+ - StudentId: 3, Status: Present, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}
+--- Submit Called at 7/23/2026 11:19:38 AM ---
+SessionId: 8
+Records Count: 3
+ - StudentId: 1, Status: Present, Note: 
+ - StudentId: 2, Status: Present, Note: 
+ - StudentId: 3, Status: Present, Note: 
+API StatusCode: OK
+API Response Body: {"success":true}

@@ -39,6 +39,48 @@ namespace AttendanceSystem.Business.Services
                 .ToListAsync();
         }
 
+        private async Task CheckStudentScheduleOverlapAsync(int classId, int studentId)
+        {
+            var targetClassSchedules = await _context.ClassSubjects
+                .Where(csb => csb.ClassId == classId && csb.Status == ClassSubjectStatus.Active)
+                .SelectMany(csb => csb.Schedules)
+                .Where(s => !s.IsDeleted)
+                .Select(s => new { s.ClassSubject.SemesterId, s.DayOfWeek, s.StartTime, s.EndTime })
+                .ToListAsync();
+
+            if (!targetClassSchedules.Any()) return;
+
+            var studentClassIds = await _context.ClassStudents
+                .Where(cs => cs.StudentId == studentId && cs.ClassId != classId && cs.Status == ClassStudentStatus.Active && !cs.IsDeleted)
+                .Select(cs => cs.ClassId)
+                .ToListAsync();
+
+            if (!studentClassIds.Any()) return;
+
+            var student = await _context.Students.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == studentId);
+            string studentName = student?.User?.FullName ?? "Sinh viên";
+
+            foreach (var targetSched in targetClassSchedules)
+            {
+                var overlap = await _context.ClassSubjects
+                    .Include(csb => csb.Class)
+                    .Include(csb => csb.Subject)
+                    .Where(csb => studentClassIds.Contains(csb.ClassId) 
+                               && csb.SemesterId == targetSched.SemesterId 
+                               && csb.Status == ClassSubjectStatus.Active)
+                    .SelectMany(csb => csb.Schedules)
+                    .Where(s => !s.IsDeleted && s.DayOfWeek == targetSched.DayOfWeek 
+                             && s.StartTime < targetSched.EndTime && s.EndTime > targetSched.StartTime)
+                    .Select(s => new { s.ClassSubject.Class.ClassCode, s.ClassSubject.Subject.SubjectName })
+                    .FirstOrDefaultAsync();
+
+                if (overlap != null)
+                {
+                    throw new InvalidOperationException($"Trùng lịch: Sinh viên {studentName} đã có lịch học trùng giờ ở lớp {overlap.ClassCode} ({overlap.SubjectName}).");
+                }
+            }
+        }
+
         public async Task<ClassStudentDto> AddStudentToClassAsync(int classId, int studentId)
         {
             var exists = await _context.ClassStudents.AnyAsync(cs => cs.ClassId == classId && cs.StudentId == studentId && !cs.IsDeleted);
@@ -46,6 +88,8 @@ namespace AttendanceSystem.Business.Services
             {
                 throw new InvalidOperationException("Sinh viên này đã có trong lớp.");
             }
+
+            await CheckStudentScheduleOverlapAsync(classId, studentId);
 
             var entity = new ClassStudent
             {
@@ -148,6 +192,18 @@ namespace AttendanceSystem.Business.Services
                     if (existingClassStudents.Contains(student.Id))
                     {
                         result.Errors.Add($"Dòng {row.RowNumber()}: Sinh viên mã '{studentCode}' đã có trong lớp này.");
+                        result.ErrorCount++;
+                        continue;
+                    }
+
+                    // Check schedule overlap
+                    try
+                    {
+                        await CheckStudentScheduleOverlapAsync(classId, student.Id);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        result.Errors.Add($"Dòng {row.RowNumber()}: {ex.Message}");
                         result.ErrorCount++;
                         continue;
                     }

@@ -12,12 +12,13 @@
     </div>
 </div>
 
-<!-- Filter -->
-<div class="row mb-3">
-    <div class="col-md-4">
-        <form method="get" asp-action="Index">
-            <div class="input-group">
-                <select name="classSubjectId" class="form-select" onchange="this.form.submit()">
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Course Section (Lớp học phần)</label>
+                <select name="classSubjectId" class="form-select">
                     <option value="">-- All Course Sections --</option>
                     @if (classSubjects != null)
                     {
@@ -27,6 +28,31 @@
                         }
                     }
                 </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Class (Lớp hành chính)</label>
+                <input type="text" name="className" class="form-control" placeholder="Class code/name..." value="@ViewBag.ClassName" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Subject (Môn học)</label>
+                <input type="text" name="subjectName" class="form-control" placeholder="Subject name..." value="@ViewBag.SubjectName" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Lecturer (Giảng viên)</label>
+                <input type="text" name="lecturerName" class="form-control" placeholder="Lecturer name..." value="@ViewBag.LecturerName" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Day of Week (Thứ)</label>
+                <select name="dayOfWeek" class="form-select">
+                    <option value="">-- All --</option>
+                    @foreach (DayOfWeek dow in Enum.GetValues(typeof(DayOfWeek)))
+                    {
+                        <option value="@dow" selected="@(ViewBag.DayOfWeek == dow.ToString())">@dow</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i> Filter</button>
             </div>
         </form>
     </div>

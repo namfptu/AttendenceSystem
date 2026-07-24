@@ -109,18 +109,39 @@ namespace AttendanceSystem.Web.Controllers
         // POST: Classes/AddStudent
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStudent(int classId, int studentId)
+        public async Task<IActionResult> AddStudent(int classId, List<int> studentIds)
         {
-            var dto = new ClassStudentDto { ClassId = classId, StudentId = studentId };
-            var result = await _apiClient.PostAsync<ClassStudentDto, ClassStudentDto>("ClassStudents", dto);
-            
-            if (result == null)
+            if (studentIds == null || studentIds.Count == 0)
             {
-                TempData["ErrorMessage"] = "Failed to add student. Maybe already in the class.";
+                TempData["ErrorMessage"] = "Vui lòng chọn ít nhất một sinh viên.";
+                return RedirectToAction(nameof(Students), new { id = classId });
+            }
+
+            int successCount = 0;
+            var errors = new List<string>();
+
+            foreach (var studentId in studentIds)
+            {
+                var dto = new ClassStudentDto { ClassId = classId, StudentId = studentId };
+                var response = await _apiClient.PostRawAsync("ClassStudents", dto);
+                if (response.IsSuccessStatusCode)
+                {
+                    successCount++;
+                }
+                else
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    errors.Add(string.IsNullOrEmpty(errorMsg) ? $"Sinh viên ID {studentId} bị lỗi hệ thống." : errorMsg);
+                }
+            }
+
+            if (errors.Any())
+            {
+                TempData["ErrorMessage"] = $"Đã thêm thành công {successCount} sinh viên. Thất bại:<br/>" + string.Join("<br/>", errors);
             }
             else
             {
-                TempData["SuccessMessage"] = "Student added successfully.";
+                TempData["SuccessMessage"] = $"Đã thêm thành công {successCount} sinh viên vào lớp.";
             }
 
             return RedirectToAction(nameof(Students), new { id = classId });

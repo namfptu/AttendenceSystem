@@ -45,5 +45,21 @@ namespace AttendanceSystem.Web.Controllers
             var data = await _apiClient.GetAsync<StudentDashboardDto>($"Dashboard/Student/{studentIdStr}");
             return View("StudentDashboard", data);
         }
+
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> AttendanceHistory(int classSubjectId)
+        {
+            var studentIdStr = User.FindFirstValue("StudentId");
+            if (string.IsNullOrEmpty(studentIdStr)) return Forbid();
+
+            var studentId = int.Parse(studentIdStr);
+            var history = await _apiClient.GetAsync<IEnumerable<AttendanceRecordDto>>($"AttendanceRecords/History/{studentId}/{classSubjectId}")
+                ?? new List<AttendanceRecordDto>();
+
+            var classSubject = await _apiClient.GetAsync<ClassSubjectDto>($"ClassSubjects/{classSubjectId}");
+            ViewBag.ClassSubject = classSubject;
+
+            return View(history);
+        }
     }
 }

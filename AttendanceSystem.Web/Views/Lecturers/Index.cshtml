@@ -20,7 +20,7 @@
 <div class="row">
     <div class="col-12">
         <div class="card table-responsive">
-            <table class="table mb-0 text-nowrap table-hover">
+            <table class="table mb-0 text-nowrap table-hover js-paginate">
                 <thead class="table-light border-light">
                     <tr>
                         <th>Lecturer Code</th>
@@ -37,7 +37,16 @@
                             <td><span class="fw-semibold">@item.LecturerCode</span></td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="~/assets/images/avatar-1.jpg" alt="" class="avatar avatar-md rounded-circle me-2" />
+                                    @if (!string.IsNullOrEmpty(item.AvatarUrl))
+                                    {
+                                        <img src="@item.AvatarUrl" alt="Avatar" class="avatar avatar-md rounded-circle me-2" style="object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 fw-bold" style="font-size:14px; width: 40px; height: 40px;">
+                                            @(item.FullName?.Substring(0, 1).ToUpper() ?? "L")
+                                        </div>
+                                    }
                                     <span>@item.FullName</span>
                                 </div>
                             </td>

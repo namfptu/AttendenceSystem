@@ -3,6 +3,7 @@
     ViewData["Title"] = "Take Attendance";
     var session = ViewBag.Session as AttendanceSystem.Business.DTOs.AttendanceSessionDto;
     bool isReadOnly = session?.Status == "Closed";
+    bool canEdit = User.IsInRole("Admin") || (session != null && DateTime.Now <= session.SessionDate.Date.Add(session.EndTime).AddHours(24));
 }
 
 <div class="row mb-4">
@@ -43,6 +44,7 @@
                             <th style="width:60px">Avatar</th>
                             <th>Student Code</th>
                             <th>Full Name</th>
+                            <th class="text-center" style="width: 150px;">Attendance Rate</th>
                             <th style="width:300px" class="text-center">Status</th>
                             <th>Note</th>
                             @if (isReadOnly)
@@ -72,6 +74,16 @@
                                 <td><strong>@record.StudentCode</strong></td>
                                 <td>@record.StudentName</td>
                                 <td class="text-center">
+                                    @if (record.AttendanceRate < 80.0)
+                                    {
+                                        <span class="text-danger fw-bold" title="Cảnh báo: Dưới 80%!"><i class="ti ti-alert-triangle me-1"></i>@record.AttendanceRate%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success fw-bold">@record.AttendanceRate%</span>
+                                    }
+                                </td>
+                                <td class="text-center">
                                     <input type="hidden" name="records[@idx].StudentId" value="@record.StudentId" />
                                     @if (!isReadOnly)
                                     {
@@ -85,7 +97,7 @@
                                     }
                                     else
                                     {
-                                        var bc = record.Status == "Present" ? "bg-success" : record.Status == "Absent" ? "bg-danger" : "bg-secondary";
+                                        var bc = record.Status == "Present" ? "bg-success" : "bg-danger";
                                         <span class="badge @bc">@record.Status</span>
                                     }
                                 </td>
@@ -104,7 +116,14 @@
                                     <td>
                                         @if (record.Id > 0)
                                         {
-                                            <a href="/TakeAttendance/EditRecord/@record.Id?sessionId=@session.Id" class="btn btn-sm btn-outline-primary"><i class="ti ti-edit"></i></a>
+                                            @if (canEdit)
+                                            {
+                                                <a href="/TakeAttendance/EditRecord/@record.Id?sessionId=@session.Id" class="btn btn-sm btn-outline-primary" title="Edit Record"><i class="ti ti-edit"></i></a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small" title="Locked (over 24 hours)"><i class="ti ti-lock"></i> Locked</span>
+                                            }
                                         }
                                     </td>
                                 }

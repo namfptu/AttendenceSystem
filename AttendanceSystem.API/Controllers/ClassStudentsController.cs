@@ -29,13 +29,20 @@ namespace AttendanceSystem.API.Controllers
         [HttpPost]
         public async Task<ActionResult<ClassStudentDto>> PostClassStudent([FromBody] ClassStudentDto dto)
         {
-            if (await _classStudentService.ExistsAsync(dto.ClassId, dto.StudentId))
+            try
             {
-                return BadRequest("Student is already in this class.");
-            }
+                if (await _classStudentService.ExistsAsync(dto.ClassId, dto.StudentId))
+                {
+                    return BadRequest("Student is already in this class.");
+                }
 
-            var createdDto = await _classStudentService.AddStudentToClassAsync(dto.ClassId, dto.StudentId);
-            return Ok(createdDto);
+                var createdDto = await _classStudentService.AddStudentToClassAsync(dto.ClassId, dto.StudentId);
+                return Ok(createdDto);
+            }
+            catch (System.InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/ClassStudents/5

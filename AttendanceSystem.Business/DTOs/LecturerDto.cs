@@ -7,5 +7,6 @@ namespace AttendanceSystem.Business.DTOs
         public string Department { get; set; } = null!;
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string? AvatarUrl { get; set; }
     }
 }
